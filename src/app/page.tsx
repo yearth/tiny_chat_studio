@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Menu, Plus, ChevronDown, MessageSquare, Settings, History, Sparkles, User, Bot, Send, Mic } from "lucide-react";
+import {
+  Menu,
+  Plus,
+  ChevronDown,
+  MessageSquare,
+  Settings,
+  History,
+  Sparkles,
+  User,
+  Bot,
+  Send,
+  Mic,
+  Cpu,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -23,14 +36,27 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("deepseek-r1");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 可用的AI模型列表
+  const availableModels = [
+    { id: "deepseek-r1", name: "DeepSeek R1" },
+    { id: "qwen-qwq-plus", name: "通义千问-QwQ-Plus" },
+    { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
+    { id: "gpt-4", name: "GPT-4" },
+  ];
 
   // Sample data for demonstration
   useEffect(() => {
     // Sample conversations
     setConversations([
       { id: "1", title: "计算机视觉分析器开发", updatedAt: new Date() },
-      { id: "2", title: "Gemini Impact 如何写好写作提示词", updatedAt: new Date() },
+      {
+        id: "2",
+        title: "Gemini Impact 如何写好写作提示词",
+        updatedAt: new Date(),
+      },
       { id: "3", title: "对比自然语言处理技术", updatedAt: new Date() },
       { id: "4", title: "Web+生成式AI的应用场景", updatedAt: new Date() },
       { id: "5", title: "PowerPoint制作工作汇报", updatedAt: new Date() },
@@ -65,20 +91,21 @@ export default function Home() {
 
       try {
         // Send message to API
-        const response = await fetch('/api/chat', {
-          method: 'POST',
+        const response = await fetch("/api/chat", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            messages: [...messages, newMessage].map(msg => ({
+            messages: [...messages, newMessage].map((msg) => ({
               role: msg.role,
-              content: msg.content
+              content: msg.content,
             })),
             // You can add conversationId here if continuing an existing conversation
             // conversationId: currentConversationId,
-            // You can specify a model ID here
-            // modelId: 'gpt-3.5-turbo',
+            // 使用选择的模型ID
+            // modelId: selectedModel,
+            modelId: "qwen-qwq-plus",
           }),
         });
 
@@ -87,7 +114,7 @@ export default function Home() {
         }
 
         const data = await response.json();
-        
+
         // Add AI response to messages
         const aiResponse: Message = {
           id: `assistant-${Date.now()}`,
@@ -97,8 +124,8 @@ export default function Home() {
         };
         setMessages((prev) => [...prev, aiResponse]);
       } catch (error) {
-        console.error('Error sending message:', error);
-        
+        console.error("Error sending message:", error);
+
         // Show error message to user
         const errorResponse: Message = {
           id: `error-${Date.now()}`,
@@ -150,9 +177,7 @@ export default function Home() {
           {/* New Chat Button */}
           <div className="p-3">
             {isSidebarOpen ? (
-              <Button
-                className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4"
-              >
+              <Button className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4">
                 <Plus className="h-5 w-5 mr-2" />
                 <span>开启新对话</span>
               </Button>
@@ -168,7 +193,11 @@ export default function Home() {
           {/* Conversations */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-2">
-              <h3 className={`text-xs text-gray-400 px-2 mb-2 ${isSidebarOpen ? "block" : "hidden"}`}>
+              <h3
+                className={`text-xs text-gray-400 px-2 mb-2 ${
+                  isSidebarOpen ? "block" : "hidden"
+                }`}
+              >
                 近期对话
               </h3>
               <ul className="space-y-1">
@@ -176,11 +205,15 @@ export default function Home() {
                   <li key={conversation.id}>
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${isSidebarOpen ? "px-3" : "px-2"}`}
+                      className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                        isSidebarOpen ? "px-3" : "px-2"
+                      }`}
                     >
                       <MessageSquare className="h-5 w-5 mr-3" />
                       {isSidebarOpen && (
-                        <span className="truncate text-sm">{conversation.title}</span>
+                        <span className="truncate text-sm">
+                          {conversation.title}
+                        </span>
                       )}
                     </Button>
                   </li>
@@ -196,7 +229,9 @@ export default function Home() {
                 <li>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${isSidebarOpen ? "px-3" : "px-2"}`}
+                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                      isSidebarOpen ? "px-3" : "px-2"
+                    }`}
                   >
                     <History className="h-5 w-5 mr-3" />
                     {isSidebarOpen && <span className="text-sm">历史记录</span>}
@@ -205,7 +240,9 @@ export default function Home() {
                 <li>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${isSidebarOpen ? "px-3" : "px-2"}`}
+                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                      isSidebarOpen ? "px-3" : "px-2"
+                    }`}
                   >
                     <Sparkles className="h-5 w-5 mr-3" />
                     {isSidebarOpen && <span className="text-sm">小应用</span>}
@@ -214,7 +251,9 @@ export default function Home() {
                 <li>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${isSidebarOpen ? "px-3" : "px-2"}`}
+                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                      isSidebarOpen ? "px-3" : "px-2"
+                    }`}
                   >
                     <Settings className="h-5 w-5 mr-3" />
                     {isSidebarOpen && <span className="text-sm">设置</span>}
@@ -269,6 +308,20 @@ export default function Home() {
         {/* Input Area */}
         <div className="p-4 border-t border-gray-700">
           <div className="max-w-3xl mx-auto">
+            {/* 模型选择器 */}
+            <div className="mb-2 flex justify-end">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="bg-[#303134] text-white text-sm border border-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {availableModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="relative rounded-xl bg-[#303134] focus-within:ring-1 focus-within:ring-blue-500">
               <Input
                 type="text"
@@ -280,7 +333,7 @@ export default function Home() {
                     handleSendMessage();
                   }
                 }}
-                placeholder="向 Gemini 提问"
+                placeholder="向 AI 提问"
                 className="border-none bg-transparent py-3 px-4 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
