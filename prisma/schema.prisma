@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  password      String?        // Hashed password
+  image         String?        // Profile image URL
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  conversations Conversation[]
+  apiKeys       ApiKey[]
+}
+
+// Conversation model
+model Conversation {
+  id        String    @id @default(cuid())
+  title     String    @default("New Conversation")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  modelId   String    // The AI model used for this conversation
+}
+
+// Message model
+model Message {
+  id             String       @id @default(cuid())
+  content        String       // The message content
+  role           String       // 'user', 'assistant', or 'system'
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+}
+
+// AI Model
+model AIModel {
+  id          String   @id @default(cuid())
+  name        String   // Display name of the model
+  provider    String   // 'openai', 'anthropic', 'custom', etc.
+  modelId     String   // The actual model ID used in API calls
+  description String?  // Description of the model
+  iconUrl     String?  // URL to the model's icon
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// API Key model
+model ApiKey {
+  id        String   @id @default(cuid())
+  name      String   // A name for the API key
+  key       String   @unique // The actual API key (should be encrypted)
+  provider  String   // 'openai', 'anthropic', etc.
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
