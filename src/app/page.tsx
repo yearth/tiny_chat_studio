@@ -14,6 +14,7 @@ import {
   Send,
   Mic,
   Cpu,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,43 @@ interface Conversation {
   id: string;
   title: string;
   updatedAt: Date;
+}
+
+// 思考过程组件
+function MessageWithThinkingProcess({ content }: { content: string }) {
+  const [isThinkingVisible, setIsThinkingVisible] = useState(false);
+  
+  // 分离思考过程和答案
+  const parts = content.split("**答案**:");
+  const thinkingProcess = parts[0].replace("**思考过程**:", "").trim();
+  const answer = parts.length > 1 ? parts[1].trim() : "";
+  
+  return (
+    <div className="space-y-2">
+      {/* 折叠面板 - 思考过程 */}
+      <div className="border border-gray-700 rounded-md overflow-hidden">
+        <button
+          onClick={() => setIsThinkingVisible(!isThinkingVisible)}
+          className="w-full flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 transition-colors"
+        >
+          <div className="flex items-center">
+            <ChevronRight
+              className={`h-4 w-4 mr-2 transition-transform ${isThinkingVisible ? 'rotate-90' : ''}`}
+            />
+            <span className="text-sm font-medium">思考过程</span>
+          </div>
+        </button>
+        {isThinkingVisible && (
+          <div className="p-3 text-sm text-gray-400 whitespace-pre-wrap bg-gray-900">
+            {thinkingProcess}
+          </div>
+        )}
+      </div>
+      
+      {/* 答案部分 */}
+      <div className="text-sm">{answer}</div>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -296,7 +334,11 @@ export default function Home() {
                     <div className="text-sm font-medium mb-1">
                       {message.role === "user" ? "You" : "Gemini"}
                     </div>
-                    <div className="text-sm">{message.content}</div>
+                    {message.role === "assistant" && message.content.includes("**思考过程**:") ? (
+                      <MessageWithThinkingProcess content={message.content} />
+                    ) : (
+                      <div className="text-sm">{message.content}</div>
+                    )}
                   </div>
                 </div>
               </div>
