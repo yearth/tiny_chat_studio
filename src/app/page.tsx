@@ -52,7 +52,7 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (input.trim()) {
       const newMessage: Message = {
         id: `user-${Date.now()}`,
@@ -63,16 +63,51 @@ export default function Home() {
       setMessages([...messages, newMessage]);
       setInput("");
 
-      // Simulate AI response
-      setTimeout(() => {
+      try {
+        // Send message to API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [...messages, newMessage].map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            // You can add conversationId here if continuing an existing conversation
+            // conversationId: currentConversationId,
+            // You can specify a model ID here
+            // modelId: 'gpt-3.5-turbo',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Add AI response to messages
         const aiResponse: Message = {
           id: `assistant-${Date.now()}`,
-          content: "这是一个模拟的AI回复。",
+          content: data.message,
           role: "assistant",
           createdAt: new Date(),
         };
         setMessages((prev) => [...prev, aiResponse]);
-      }, 1000);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        
+        // Show error message to user
+        const errorResponse: Message = {
+          id: `error-${Date.now()}`,
+          content: "抱歉，发送消息时出现错误。请稍后再试。",
+          role: "assistant",
+          createdAt: new Date(),
+        };
+        setMessages((prev) => [...prev, errorResponse]);
+      }
     }
   };
 

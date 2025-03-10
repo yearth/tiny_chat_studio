@@ -1,5 +1,5 @@
-import OpenAI from 'openai';
-import { Message } from '@/types/chat';
+import OpenAI from "openai";
+import { Message } from "@/types/chat";
 
 // Initialize OpenAI client
 const getOpenAIClient = (apiKey: string) => {
@@ -20,22 +20,22 @@ const formatMessagesForOpenAI = (messages: Message[]) => {
 export async function generateOpenAICompletion(
   messages: Message[],
   apiKey: string,
-  model: string = 'gpt-3.5-turbo'
+  model: string = "gpt-3.5-turbo"
 ) {
   const openai = getOpenAIClient(apiKey);
-  
+
   try {
     const formattedMessages = formatMessagesForOpenAI(messages);
-    
+
     const response = await openai.chat.completions.create({
       model: model,
       messages: formattedMessages,
       stream: true,
     });
-    
+
     return response;
   } catch (error) {
-    console.error('Error generating OpenAI completion:', error);
+    console.error("Error generating OpenAI completion:", error);
     throw error;
   }
 }
@@ -48,7 +48,7 @@ export async function generateAIResponse(
   apiKey: string
 ) {
   switch (provider.toLowerCase()) {
-    case 'openai':
+    case "openai":
       return generateOpenAICompletion(messages, apiKey, modelId);
     // Add more providers as needed
     default:

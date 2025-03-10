@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Message } from '@/types/chat';
+import { AIMessage } from '@/lib/ai/types';
 import { generateAIResponse } from '@/lib/ai';
 import { prisma } from '@/server/db/client';
+import { OpenAI } from 'openai';
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,30 +64,42 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Get AI response
-    const provider = 'openai'; // Default provider
-    const response = await generateAIResponse(
-      messages,
-      provider,
-      modelId || 'gpt-3.5-turbo',
-      apiKey
-    );
+    // 将消息格式转换为AIMessage格式
+    const formattedMessages: AIMessage[] = messages.map((msg: any) => ({
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content: msg.content,
+    }));
 
-    // For simplicity, we're assuming the response is not streamed
-    // In a real application, you would handle streaming responses
-    const aiResponse = 'This is a placeholder AI response';
+    // 获取AI响应
+    const provider = 'openai'; // 默认提供商
+    let aiResponseText: string;
+    try {
+      // 使用类型断言确保返回的是字符串
+      const response = await generateAIResponse(
+        formattedMessages,
+        provider,
+        modelId || 'gpt-3.5-turbo',
+        apiKey
+      );
+      
+      // 确保响应是字符串
+      aiResponseText = String(response);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      aiResponseText = '抱歉，生成响应时出现错误。请稍后再试。';
+    }
 
     // Save the AI response to the database
     await prisma.message.create({
       data: {
-        content: aiResponse,
+        content: aiResponseText,
         role: 'assistant',
         conversationId: conversation.id,
       },
     });
 
     return NextResponse.json({
-      message: aiResponse,
+      message: aiResponseText,
       conversationId: conversation.id,
     });
   } catch (error) {
