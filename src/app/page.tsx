@@ -2,32 +2,27 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-  Menu,
-  Plus,
-  ChevronDown,
-  MessageSquare,
-  Settings,
-  History,
-  Sparkles,
   User,
   Bot,
   Send,
   Mic,
-  Cpu,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileLayout } from "@/components/layouts/MobileLayout";
+import { TabletLayout } from "@/components/layouts/TabletLayout";
+import { DesktopLayout } from "@/components/layouts/DesktopLayout";
+import { Message, Conversation } from "@/types/chat";
 
-interface Message {
+// 扩展导入的Message类型，确保所有必需字段都有值
+interface LocalMessage extends Message {
   id: string;
-  content: string;
-  role: "user" | "assistant" | "system";
   createdAt: Date;
 }
 
-interface Conversation {
+// 扩展导入的Conversation类型，确保所有必需字段都有值
+interface LocalConversation extends Partial<Conversation> {
   id: string;
   title: string;
   updatedAt: Date;
@@ -74,9 +69,9 @@ function MessageWithThinkingProcess({ content }: { content: string }) {
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<LocalMessage[]>([]);
   const [input, setInput] = useState("");
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<LocalConversation[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("deepseek-r1");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +116,7 @@ export default function Home() {
 
   const handleSendMessage = async () => {
     if (input.trim()) {
-      const newMessage: Message = {
+      const newMessage: LocalMessage = {
         id: `user-${Date.now()}`,
         content: input,
         role: "user",
@@ -157,7 +152,7 @@ export default function Home() {
         const data = await response.json();
 
         // Add AI response to messages
-        const aiResponse: Message = {
+        const aiResponse: LocalMessage = {
           id: `assistant-${Date.now()}`,
           content: data.message,
           role: "assistant",
@@ -168,7 +163,7 @@ export default function Home() {
         console.error("Error sending message:", error);
 
         // Show error message to user
-        const errorResponse: Message = {
+        const errorResponse: LocalMessage = {
           id: `error-${Date.now()}`,
           content: "抱歉，发送消息时出现错误。请稍后再试。",
           role: "assistant",
@@ -183,19 +178,21 @@ export default function Home() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // 添加一个状态来跟踪是否是小屏幕（<768px）
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  // 添加状态来跟踪不同屏幕尺寸
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
   // 检测屏幕宽度并设置状态
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 768); // 提高临界值，使更多屏幕尺寸下显示悬浮按钮
-      console.log(
-        "当前屏幕宽度:",
-        window.innerWidth,
-        "是否小屏幕:",
-        window.innerWidth < 768
-      );
+      const width = window.innerWidth;
+      if (width < 640) {
+        setScreenSize('mobile');
+      } else if (width < 1024) {
+        setScreenSize('tablet');
+      } else {
+        setScreenSize('desktop');
+      }
+      console.log("当前屏幕宽度:", width, "屏幕类型:", screenSize);
     };
 
     // 初始检查
@@ -206,265 +203,129 @@ export default function Home() {
 
     // 清理函数
     return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
+  }, []);  // 这里不需要添加screenSize作为依赖，因为我们只关心窗口大小变化
 
-  return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      {/* 小屏幕下的悬浮菜单按钮 - 始终显示在小屏幕上 */}
-      {isSmallScreen && !isSidebarOpen && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed left-4 top-4 z-50 bg-blue-500 text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition-all animate-pulse"
-          aria-label="打开菜单"
-          style={{ boxShadow: "0 0 10px rgba(59, 130, 246, 0.7)" }}
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={`fixed md:relative z-20 h-full bg-background border-r border-gray-700 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "w-64" : "w-0 md:w-16 overflow-hidden"
-        } ${
-          isSmallScreen && !isSidebarOpen
-            ? "-translate-x-full"
-            : "translate-x-0"
-        }`}
-        style={{
-          boxShadow: isSidebarOpen ? "0 0 15px rgba(0, 0, 0, 0.3)" : "none",
-        }}
-      >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className="flex items-center p-4 h-16 border-b border-muted">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-2"
-              onClick={toggleSidebar}
-              aria-label={isSidebarOpen ? "收起侧边栏" : "展开侧边栏"}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div
-              className={`font-medium transition-opacity duration-200 ${
-                isSidebarOpen ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <div className="flex items-center">
-                <span className="font-semibold">Gemini</span>
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </div>
-              <div className="text-xs text-muted-foreground">2.0 Beta</div>
-            </div>
-          </div>
-
-          {/* New Chat Button */}
-          <div className="p-3">
-            {isSidebarOpen ? (
-              <Button className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4">
-                <Plus className="h-5 w-5 mr-2" />
-                <span>开启新对话</span>
-              </Button>
-            ) : (
-              <div className="flex justify-center">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
-                  <Plus className="h-5 w-5 text-muted-foreground stroke-[2.5]" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Conversations */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-2">
-              <h3
-                className={`text-xs text-muted-foreground px-2 mb-2 ${
-                  isSidebarOpen ? "block" : "hidden"
-                }`}
-              >
-                近期对话
-              </h3>
-              <ul className="space-y-1">
-                {conversations.map((conversation) => (
-                  <li key={conversation.id}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 ${
-                        isSidebarOpen ? "px-3" : "px-2"
-                      }`}
-                    >
-                      <MessageSquare className="h-5 w-5 mr-3" />
-                      {isSidebarOpen && (
-                        <span className="truncate text-sm">
-                          {conversation.title}
-                        </span>
-                      )}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Sidebar Footer */}
-          <div className="mt-auto border-t border-muted">
-            <div className="p-2">
-              <ul className="space-y-1">
-                <li>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
-                      isSidebarOpen ? "px-3" : "px-2"
-                    }`}
-                  >
-                    <History className="h-5 w-5 mr-3" />
-                    {isSidebarOpen && <span className="text-sm">历史记录</span>}
-                  </Button>
-                </li>
-                <li>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
-                      isSidebarOpen ? "px-3" : "px-2"
-                    }`}
-                  >
-                    <Sparkles className="h-5 w-5 mr-3" />
-                    {isSidebarOpen && <span className="text-sm">小应用</span>}
-                  </Button>
-                </li>
-                <li>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
-                      isSidebarOpen ? "px-3" : "px-2"
-                    }`}
-                  >
-                    <Settings className="h-5 w-5 mr-3" />
-                    {isSidebarOpen && <span className="text-sm">设置</span>}
-                  </Button>
-                </li>
-                <li>
-                  <div
-                    className={`flex items-center ${
-                      isSidebarOpen ? "px-3 py-2" : "justify-center py-2"
-                    }`}
-                  >
-                    {isSidebarOpen && (
-                      <span className="text-sm text-muted-foreground mr-auto">
-                        主题切换
-                      </span>
-                    )}
-                    <ThemeToggle />
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Overlay for mobile when sidebar is open */}
-        {isSidebarOpen && (
-          <div
-            className="md:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-10"
-            onClick={toggleSidebar}
-          ></div>
-        )}
-
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-3xl mx-auto">
-            {messages.map((message) => (
-              <div key={message.id} className="mb-6">
-                <div className="flex items-start">
-                  <div className="mr-4 mt-1">
-                    {message.role === "user" ? (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                        <User className="h-5 w-5" />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-                        <Bot className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium mb-1">
-                      {message.role === "user" ? "You" : "Gemini"}
+  // 渲染聊天内容区域
+  const renderChatContent = () => (
+    <>
+      {/* 聊天区域 */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-3xl mx-auto">
+          {messages.map((message) => (
+            <div key={message.id} className="mb-6">
+              <div className="flex items-start">
+                <div className="mr-4 mt-1">
+                  {message.role === "user" ? (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                      <User className="h-5 w-5" />
                     </div>
-                    {message.role === "assistant" &&
-                    message.content.includes("**思考过程**:") ? (
-                      <MessageWithThinkingProcess content={message.content} />
-                    ) : (
-                      <div className="text-sm">{message.content}</div>
-                    )}
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+                      <Bot className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">
+                    {message.role === "user" ? "You" : "Gemini"}
                   </div>
+                  {message.role === "assistant" &&
+                  message.content.includes("**思考过程**:") ? (
+                    <MessageWithThinkingProcess content={message.content} />
+                  ) : (
+                    <div className="text-sm">{message.content}</div>
+                  )}
                 </div>
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 border-t border-muted">
-          <div className="max-w-3xl mx-auto">
-            {/* 模型选择器 */}
-            <div className="mb-2 flex justify-end">
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="bg-muted text-foreground text-sm border border-input rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {availableModels.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                  </option>
-                ))}
-              </select>
             </div>
-            <div className="relative rounded-xl bg-muted focus-within:ring-1 focus-within:ring-primary">
-              <Input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder="向 AI 提问"
-                className="border-none bg-transparent py-3 px-4 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={handleSendMessage}
-                  disabled={!input.trim()}
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* 输入区域 */}
+      <div className="p-4 border-t border-muted">
+        <div className="max-w-3xl mx-auto">
+          {/* 模型选择器 */}
+          <div className="mb-2 flex justify-end">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="bg-muted text-foreground text-sm border border-input rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              {availableModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="relative rounded-xl bg-muted focus-within:ring-1 focus-within:ring-primary">
+            <Input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="向 AI 提问"
+              className="border-none bg-transparent py-3 px-4 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Mic className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={handleSendMessage}
+                disabled={!input.trim()}
+              >
+                <Send className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  // 根据屏幕尺寸渲染不同的布局
+  return (
+    screenSize === 'mobile' ? (
+      <MobileLayout
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        conversations={conversations}
+      >
+        {renderChatContent()}
+      </MobileLayout>
+    ) : screenSize === 'tablet' ? (
+      <TabletLayout
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        conversations={conversations}
+      >
+        {renderChatContent()}
+      </TabletLayout>
+    ) : (
+      <DesktopLayout
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        conversations={conversations}
+      >
+        {renderChatContent()}
+      </DesktopLayout>
+    )
   );
 }
