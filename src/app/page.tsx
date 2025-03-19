@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface Message {
   id: string;
@@ -35,34 +36,36 @@ interface Conversation {
 // 思考过程组件
 function MessageWithThinkingProcess({ content }: { content: string }) {
   const [isThinkingVisible, setIsThinkingVisible] = useState(false);
-  
+
   // 分离思考过程和答案
   const parts = content.split("**答案**:");
   const thinkingProcess = parts[0].replace("**思考过程**:", "").trim();
   const answer = parts.length > 1 ? parts[1].trim() : "";
-  
+
   return (
     <div className="space-y-2">
       {/* 折叠面板 - 思考过程 */}
-      <div className="border border-gray-700 rounded-md overflow-hidden">
+      <div className="border border-muted rounded-md overflow-hidden">
         <button
           onClick={() => setIsThinkingVisible(!isThinkingVisible)}
-          className="w-full flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-700 transition-colors"
+          className="w-full flex items-center justify-between p-2 bg-muted hover:bg-muted/80 transition-colors"
         >
           <div className="flex items-center">
             <ChevronRight
-              className={`h-4 w-4 mr-2 transition-transform ${isThinkingVisible ? 'rotate-90' : ''}`}
+              className={`h-4 w-4 mr-2 transition-transform ${
+                isThinkingVisible ? "rotate-90" : ""
+              }`}
             />
             <span className="text-sm font-medium">思考过程</span>
           </div>
         </button>
         {isThinkingVisible && (
-          <div className="p-3 text-sm text-gray-400 whitespace-pre-wrap bg-gray-900">
+          <div className="p-3 text-sm text-muted-foreground whitespace-pre-wrap bg-muted/80">
             {thinkingProcess}
           </div>
         )}
       </div>
-      
+
       {/* 答案部分 */}
       <div className="text-sm">{answer}</div>
     </div>
@@ -181,16 +184,16 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-[#202124] text-white overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
       <div
-        className={`fixed md:relative z-10 h-full bg-[#202124] border-r border-gray-700 transition-all duration-300 ease-in-out ${
+        className={`fixed md:relative z-10 h-full bg-background border-r border-gray-700 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "w-64" : "w-0 md:w-16 overflow-hidden"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center p-4 h-16 border-b border-gray-700">
+          <div className="flex items-center p-4 h-16 border-b border-muted">
             <Button
               variant="ghost"
               size="icon"
@@ -208,7 +211,7 @@ export default function Home() {
                 <span className="font-semibold">Gemini</span>
                 <ChevronDown className="h-4 w-4 ml-1" />
               </div>
-              <div className="text-xs text-gray-400">2.0 Beta</div>
+              <div className="text-xs text-muted-foreground">2.0 Beta</div>
             </div>
           </div>
 
@@ -221,8 +224,8 @@ export default function Home() {
               </Button>
             ) : (
               <div className="flex justify-center">
-                <div className="w-10 h-10 rounded-full bg-[#202123] flex items-center justify-center cursor-pointer hover:bg-[#2a2b2d] transition-colors">
-                  <Plus className="h-5 w-5 text-[#737375] stroke-[2.5]" />
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
+                  <Plus className="h-5 w-5 text-muted-foreground stroke-[2.5]" />
                 </div>
               </div>
             )}
@@ -232,7 +235,7 @@ export default function Home() {
           <div className="flex-1 overflow-y-auto">
             <div className="p-2">
               <h3
-                className={`text-xs text-gray-400 px-2 mb-2 ${
+                className={`text-xs text-muted-foreground px-2 mb-2 ${
                   isSidebarOpen ? "block" : "hidden"
                 }`}
               >
@@ -243,7 +246,7 @@ export default function Home() {
                   <li key={conversation.id}>
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                      className={`w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 ${
                         isSidebarOpen ? "px-3" : "px-2"
                       }`}
                     >
@@ -261,7 +264,7 @@ export default function Home() {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="mt-auto border-t border-gray-700">
+          <div className="mt-auto border-t border-muted">
             <div className="p-2">
               <ul className="space-y-1">
                 <li>
@@ -297,6 +300,12 @@ export default function Home() {
                     {isSidebarOpen && <span className="text-sm">设置</span>}
                   </Button>
                 </li>
+                <li>
+                  <div className={`flex items-center ${isSidebarOpen ? "px-3 py-2" : "justify-center py-2"}`}>
+                    {isSidebarOpen && <span className="text-sm text-muted-foreground mr-auto">主题切换</span>}
+                    <ThemeToggle />
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
@@ -308,7 +317,7 @@ export default function Home() {
         {/* Overlay for mobile when sidebar is open */}
         {isSidebarOpen && (
           <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-0"
+            className="md:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-0"
             onClick={toggleSidebar}
           ></div>
         )}
@@ -321,11 +330,11 @@ export default function Home() {
                 <div className="flex items-start">
                   <div className="mr-4 mt-1">
                     {message.role === "user" ? (
-                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                         <User className="h-5 w-5" />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
                         <Bot className="h-5 w-5" />
                       </div>
                     )}
@@ -334,7 +343,8 @@ export default function Home() {
                     <div className="text-sm font-medium mb-1">
                       {message.role === "user" ? "You" : "Gemini"}
                     </div>
-                    {message.role === "assistant" && message.content.includes("**思考过程**:") ? (
+                    {message.role === "assistant" &&
+                    message.content.includes("**思考过程**:") ? (
                       <MessageWithThinkingProcess content={message.content} />
                     ) : (
                       <div className="text-sm">{message.content}</div>
@@ -348,14 +358,14 @@ export default function Home() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-muted">
           <div className="max-w-3xl mx-auto">
             {/* 模型选择器 */}
             <div className="mb-2 flex justify-end">
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="bg-[#303134] text-white text-sm border border-gray-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="bg-muted text-foreground text-sm border border-input rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 {availableModels.map((model) => (
                   <option key={model.id} value={model.id}>
@@ -364,7 +374,7 @@ export default function Home() {
                 ))}
               </select>
             </div>
-            <div className="relative rounded-xl bg-[#303134] focus-within:ring-1 focus-within:ring-blue-500">
+            <div className="relative rounded-xl bg-muted focus-within:ring-1 focus-within:ring-primary">
               <Input
                 type="text"
                 value={input}
@@ -383,7 +393,7 @@ export default function Home() {
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="text-gray-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <Mic className="h-5 w-5" />
                 </Button>
@@ -391,7 +401,7 @@ export default function Home() {
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="text-gray-400 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                   onClick={handleSendMessage}
                   disabled={!input.trim()}
                 >
