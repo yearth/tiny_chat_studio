@@ -183,13 +183,57 @@ export default function Home() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // 添加一个状态来跟踪是否是小屏幕（<768px）
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  // 检测屏幕宽度并设置状态
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768); // 提高临界值，使更多屏幕尺寸下显示悬浮按钮
+      console.log(
+        "当前屏幕宽度:",
+        window.innerWidth,
+        "是否小屏幕:",
+        window.innerWidth < 768
+      );
+    };
+
+    // 初始检查
+    checkScreenSize();
+
+    // 监听窗口大小变化
+    window.addEventListener("resize", checkScreenSize);
+
+    // 清理函数
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      {/* 小屏幕下的悬浮菜单按钮 - 始终显示在小屏幕上 */}
+      {isSmallScreen && !isSidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed left-4 top-4 z-50 bg-blue-500 text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition-all animate-pulse"
+          aria-label="打开菜单"
+          style={{ boxShadow: "0 0 10px rgba(59, 130, 246, 0.7)" }}
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      )}
+
       {/* Sidebar */}
       <div
-        className={`fixed md:relative z-10 h-full bg-background border-r border-gray-700 transition-all duration-300 ease-in-out ${
+        className={`fixed md:relative z-20 h-full bg-background border-r border-gray-700 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "w-64" : "w-0 md:w-16 overflow-hidden"
+        } ${
+          isSmallScreen && !isSidebarOpen
+            ? "-translate-x-full"
+            : "translate-x-0"
         }`}
+        style={{
+          boxShadow: isSidebarOpen ? "0 0 15px rgba(0, 0, 0, 0.3)" : "none",
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -199,6 +243,7 @@ export default function Home() {
               size="icon"
               className="mr-2"
               onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? "收起侧边栏" : "展开侧边栏"}
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -301,8 +346,16 @@ export default function Home() {
                   </Button>
                 </li>
                 <li>
-                  <div className={`flex items-center ${isSidebarOpen ? "px-3 py-2" : "justify-center py-2"}`}>
-                    {isSidebarOpen && <span className="text-sm text-muted-foreground mr-auto">主题切换</span>}
+                  <div
+                    className={`flex items-center ${
+                      isSidebarOpen ? "px-3 py-2" : "justify-center py-2"
+                    }`}
+                  >
+                    {isSidebarOpen && (
+                      <span className="text-sm text-muted-foreground mr-auto">
+                        主题切换
+                      </span>
+                    )}
                     <ThemeToggle />
                   </div>
                 </li>
@@ -317,7 +370,7 @@ export default function Home() {
         {/* Overlay for mobile when sidebar is open */}
         {isSidebarOpen && (
           <div
-            className="md:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-0"
+            className="md:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-10"
             onClick={toggleSidebar}
           ></div>
         )}

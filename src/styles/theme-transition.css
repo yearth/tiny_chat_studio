@@ -1,0 +1,40 @@
+/* 主题切换过渡效果 */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* 不需要过渡效果的元素 */
+.no-transition,
+.font-semibold,
+span.font-semibold,
+.flex .font-semibold,
+[class*="font-"],
+.text-foreground,
+.text-primary,
+.text-secondary,
+.text-accent,
+.text-muted,
+.text-muted-foreground {
+  transition: none !important;
+}
+
+/* 主题切换图标的特殊过渡效果 */
+.theme-toggle-icon {
+  transition-duration: 500ms;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 确保一些元素有更平滑的过渡 */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* 强制文本元素立即变化 */
+span, p, h1, h2, h3, h4, h5, h6, div {
+  color: var(--foreground);
+  transition: color 0ms !important;
+}
