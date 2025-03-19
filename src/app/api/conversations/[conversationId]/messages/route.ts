@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { conversationId: string } }
-) {
+type tParams = Promise<{ conversationId: string }>;
+
+export async function GET(request: NextRequest, context: { params: tParams }) {
   try {
-    const { conversationId } = await Promise.resolve(params);
+    const { conversationId } = await context.params;
 
     if (!conversationId) {
       return NextResponse.json({ error: "缺少对话ID参数" }, { status: 400 });
@@ -24,12 +23,9 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { conversationId: string } }
-) {
+export async function POST(request: NextRequest, context: { params: tParams }) {
   try {
-    const { conversationId } = await Promise.resolve(params);
+    const { conversationId } = await context.params;
     const body = await request.json();
     const { message } = body;
 

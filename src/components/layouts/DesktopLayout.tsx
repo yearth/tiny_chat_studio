@@ -100,7 +100,11 @@ export function DesktopLayout({
                       className={`w-full justify-start ${selectedConversationId === conversation.id ? "bg-muted text-foreground" : "text-muted-foreground"} hover:text-foreground hover:bg-muted/50 ${
                         isSidebarOpen ? "px-3" : "px-2"
                       }`}
-                      onClick={() => onSelectConversation && onSelectConversation(conversation.id)}
+                      onClick={() => {
+                        if (onSelectConversation) {
+                          onSelectConversation(conversation.id);
+                        }
+                      }}
                     >
                       <MessageSquare className="h-5 w-5 mr-3" />
                       {isSidebarOpen && (

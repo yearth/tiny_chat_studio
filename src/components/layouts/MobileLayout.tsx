@@ -98,7 +98,9 @@ export function MobileLayout({
                       variant="ghost"
                       className={`w-full justify-start ${selectedConversationId === conversation.id ? "bg-muted text-foreground" : "text-muted-foreground"} hover:text-foreground hover:bg-muted/50 px-3`}
                       onClick={() => {
-                        onSelectConversation && onSelectConversation(conversation.id);
+                        if (onSelectConversation) {
+                          onSelectConversation(conversation.id);
+                        }
                         // 在移动端选择对话后关闭侧边栏
                         toggleSidebar();
                       }}
