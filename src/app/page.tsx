@@ -14,29 +14,29 @@ import { ScreenSize } from "@/types/layout";
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   // 使用自定义钩子管理屏幕尺寸
   const screenSize = useScreenSize();
-  
+
   // 使用自定义钩子管理对话列表
   // 注意：在实际应用中，userId应该从认证系统获取
-  const { 
-    conversations, 
+  const {
+    conversations,
     selectedConversationId,
     isLoading: isLoadingConversations,
     selectConversation,
-    addConversation
-  } = useConversations({ 
-    userId: "cm8foq7qi0000jsmjt113qdc2" // 使用 seed 脚本创建的测试用户ID
+    addConversation,
+  } = useConversations({
+    userId: "cm8foq7qi0000jsmjt113qdc2", // 使用 seed 脚本创建的测试用户ID
   });
-  
+
   // 使用自定义钩子管理当前对话的消息
-  const { 
-    messages, 
-    sendMessage, 
-    isLoading: isLoadingMessages 
-  } = useChat({ 
-    conversationId: selectedConversationId 
+  const {
+    messages,
+    sendMessage,
+    isLoading: isLoadingMessages,
+  } = useChat({
+    conversationId: selectedConversationId,
   });
 
   // 处理发送消息
@@ -44,7 +44,8 @@ export default function Home() {
     // 如果没有选中的对话，先创建一个新对话
     if (!selectedConversationId) {
       // 使用消息的前10个字符作为对话标题
-      const title = message.length > 10 ? `${message.substring(0, 10)}...` : message;
+      const title =
+        message.length > 10 ? `${message.substring(0, 10)}...` : message;
       const newConversation = await addConversation(title);
       // 如果创建成功，发送消息
       if (newConversation) {
@@ -63,9 +64,9 @@ export default function Home() {
   const renderChatContent = () => (
     <>
       <MessageList messages={messages} />
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        disabled={isLoadingMessages || isLoadingConversations} 
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        disabled={isLoadingMessages || isLoadingConversations}
       />
     </>
   );
@@ -75,6 +76,8 @@ export default function Home() {
       isSidebarOpen={isSidebarOpen}
       toggleSidebar={toggleSidebar}
       conversations={conversations}
+      onSelectConversation={selectConversation}
+      selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
     </MobileLayout>
@@ -83,6 +86,8 @@ export default function Home() {
       isSidebarOpen={isSidebarOpen}
       toggleSidebar={toggleSidebar}
       conversations={conversations}
+      onSelectConversation={selectConversation}
+      selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
     </TabletLayout>
@@ -91,6 +96,8 @@ export default function Home() {
       isSidebarOpen={isSidebarOpen}
       toggleSidebar={toggleSidebar}
       conversations={conversations}
+      onSelectConversation={selectConversation}
+      selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
     </DesktopLayout>

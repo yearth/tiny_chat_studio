@@ -21,6 +21,8 @@ interface DesktopLayoutProps {
   toggleSidebar: () => void;
   conversations: SimpleConversation[];
   children: React.ReactNode;
+  onSelectConversation?: (conversationId: string) => void;
+  selectedConversationId?: string | null;
 }
 
 export function DesktopLayout({
@@ -28,6 +30,8 @@ export function DesktopLayout({
   toggleSidebar,
   conversations,
   children,
+  onSelectConversation,
+  selectedConversationId,
 }: DesktopLayoutProps) {
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -93,9 +97,10 @@ export function DesktopLayout({
                   <li key={conversation.id}>
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 ${
+                      className={`w-full justify-start ${selectedConversationId === conversation.id ? "bg-muted text-foreground" : "text-muted-foreground"} hover:text-foreground hover:bg-muted/50 ${
                         isSidebarOpen ? "px-3" : "px-2"
                       }`}
+                      onClick={() => onSelectConversation && onSelectConversation(conversation.id)}
                     >
                       <MessageSquare className="h-5 w-5 mr-3" />
                       {isSidebarOpen && (

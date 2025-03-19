@@ -21,6 +21,8 @@ interface MobileLayoutProps {
   toggleSidebar: () => void;
   conversations: SimpleConversation[];
   children: React.ReactNode;
+  onSelectConversation?: (conversationId: string) => void;
+  selectedConversationId?: string | null;
 }
 
 export function MobileLayout({
@@ -28,6 +30,8 @@ export function MobileLayout({
   toggleSidebar,
   conversations,
   children,
+  onSelectConversation,
+  selectedConversationId,
 }: MobileLayoutProps) {
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -92,7 +96,12 @@ export function MobileLayout({
                   <li key={conversation.id}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 px-3"
+                      className={`w-full justify-start ${selectedConversationId === conversation.id ? "bg-muted text-foreground" : "text-muted-foreground"} hover:text-foreground hover:bg-muted/50 px-3`}
+                      onClick={() => {
+                        onSelectConversation && onSelectConversation(conversation.id);
+                        // 在移动端选择对话后关闭侧边栏
+                        toggleSidebar();
+                      }}
                     >
                       <MessageSquare className="h-5 w-5 mr-3" />
                       <span className="truncate text-sm">
