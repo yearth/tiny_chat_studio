@@ -1,4 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tiny Chat Studio
+
+一个简洁的聊天应用，支持多对话管理和响应式设计。该项目使用 [Next.js](https://nextjs.org) 构建，并通过 [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) 初始化。
+
+## 主要特性
+
+- 响应式设计：自适应桌面端、平板和移动端
+- 多对话管理：支持创建和切换多个对话
+- 数据持久化：使用数据库存储对话和消息
+- 模块化架构：组件和业务逻辑分离，提高可维护性
 
 ## Getting Started
 
