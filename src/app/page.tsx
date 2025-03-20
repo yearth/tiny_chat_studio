@@ -13,6 +13,7 @@ import { useConversations } from "@/hooks/useConversations";
 import { ScreenSize } from "@/types/layout";
 
 export default function Home() {
+  console.log("init project");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // 使用自定义钩子管理屏幕尺寸
@@ -27,7 +28,7 @@ export default function Home() {
     selectConversation,
     addConversation,
   } = useConversations({
-    userId: "cm8foq7qi0000jsmjt113qdc2", // 使用 seed 脚本创建的测试用户ID
+    userId: "cm8h2lozw0000jsz3jff2qk1h", // 使用 seed 脚本创建的测试用户ID
   });
 
   // 使用自定义钩子管理当前对话的消息
