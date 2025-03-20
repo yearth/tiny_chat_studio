@@ -11,6 +11,7 @@ import { useScreenSize } from "@/hooks/useScreenSize";
 import { useChat } from "@/hooks/useChat";
 import { useConversations } from "@/hooks/useConversations";
 import { ScreenSize } from "@/types/layout";
+import { ConversationProvider } from "@/contexts/ConversationContext";
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -26,6 +27,7 @@ export default function Home() {
     isLoading: isLoadingConversations,
     selectConversation,
     addConversation,
+    removeConversation,
   } = useConversations({
     userId: "cm8h2lozw0000jsz3jff2qk1h", // 使用 seed 脚本创建的测试用户ID
   });
@@ -83,38 +85,46 @@ export default function Home() {
     />,
   ];
 
-  return screenSize === ScreenSize.MOBILE ? (
-    <MobileLayout
-      isSidebarOpen={isSidebarOpen}
-      toggleSidebar={toggleSidebar}
+  return (
+    <ConversationProvider
+      removeConversation={removeConversation}
       conversations={conversations}
-      onSelectConversation={selectConversation}
-      onNewConversation={handleNewConversation}
       selectedConversationId={selectedConversationId}
     >
-      {renderChatContent()}
-    </MobileLayout>
-  ) : screenSize === ScreenSize.TABLET ? (
-    <TabletLayout
-      isSidebarOpen={isSidebarOpen}
-      toggleSidebar={toggleSidebar}
-      conversations={conversations}
-      onSelectConversation={selectConversation}
-      onNewConversation={handleNewConversation}
-      selectedConversationId={selectedConversationId}
-    >
-      {renderChatContent()}
-    </TabletLayout>
-  ) : (
-    <DesktopLayout
-      isSidebarOpen={isSidebarOpen}
-      toggleSidebar={toggleSidebar}
-      conversations={conversations}
-      onSelectConversation={selectConversation}
-      onNewConversation={handleNewConversation}
-      selectedConversationId={selectedConversationId}
-    >
-      {renderChatContent()}
-    </DesktopLayout>
+      {screenSize === ScreenSize.MOBILE ? (
+        <MobileLayout
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          conversations={conversations}
+          onSelectConversation={selectConversation}
+          onNewConversation={handleNewConversation}
+          selectedConversationId={selectedConversationId}
+        >
+          {renderChatContent()}
+        </MobileLayout>
+      ) : screenSize === ScreenSize.TABLET ? (
+        <TabletLayout
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          conversations={conversations}
+          onSelectConversation={selectConversation}
+          onNewConversation={handleNewConversation}
+          selectedConversationId={selectedConversationId}
+        >
+          {renderChatContent()}
+        </TabletLayout>
+      ) : (
+        <DesktopLayout
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          conversations={conversations}
+          onSelectConversation={selectConversation}
+          onNewConversation={handleNewConversation}
+          selectedConversationId={selectedConversationId}
+        >
+          {renderChatContent()}
+        </DesktopLayout>
+      )}
+    </ConversationProvider>
   );
 }

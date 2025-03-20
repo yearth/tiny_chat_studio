@@ -3,6 +3,7 @@ import { LocalConversation } from "@/data/mockData";
 import {
   getUserConversations,
   createConversation,
+  deleteConversation,
 } from "@/services/conversationService";
 
 interface UseConversationsOptions {
@@ -70,6 +71,38 @@ export function useConversations({
     setSelectedConversationId(conversationId);
   };
 
+  // 删除对话
+  const removeConversation = async (conversationId: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 调用删除对话的API
+      await deleteConversation(conversationId);
+      
+      // 从列表中移除对话
+      setConversations((prev) => prev.filter(conv => conv.id !== conversationId));
+      
+      // 如果删除的是当前选中的对话，则选择列表中的第一个对话（如果有的话）
+      if (selectedConversationId === conversationId) {
+        const remainingConversations = conversations.filter(conv => conv.id !== conversationId);
+        if (remainingConversations.length > 0) {
+          setSelectedConversationId(remainingConversations[0].id);
+        } else {
+          setSelectedConversationId(null);
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      console.error("删除对话错误:", err);
+      setError(err instanceof Error ? err.message : "删除对话失败");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // 初始加载对话列表
   useEffect(() => {
     if (userId) {
@@ -85,6 +118,7 @@ export function useConversations({
     loadConversations,
     addConversation,
     selectConversation,
+    removeConversation,
     setConversations,
   };
 }

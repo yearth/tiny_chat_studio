@@ -134,3 +134,31 @@ export async function saveMessageToConversation(
     throw error;
   }
 }
+
+/**
+ * 删除对话
+ * @param conversationId 对话ID
+ * @returns 删除结果
+ */
+export async function deleteConversation(
+  conversationId: string
+): Promise<{ success: boolean }> {
+  try {
+    // 向API发送删除对话请求
+    const response = await fetch(`/api/conversations/${conversationId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`删除对话失败: ${response.status}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("删除对话错误:", error);
+    throw error;
+  }
+}
