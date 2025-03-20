@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ConversationMenu } from "@/components/ui/ConversationMenu";
 
 // 使用通用的类型定义
 export type SimpleConversation = {
@@ -150,25 +151,34 @@ export function Sidebar({
             </h3>
             <ul className="space-y-1">
               {conversations.map((conversation) => (
-                <li key={conversation.id}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${
-                      selectedConversationId === conversation.id
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground"
-                    } hover:text-foreground hover:bg-muted/50 ${
-                      isSidebarOpen || isMobile ? "px-3" : "px-2"
-                    }`}
-                    onClick={() => handleConversationSelect(conversation.id)}
-                  >
-                    <MessageSquare className="h-5 w-5 mr-3" />
+                <li key={conversation.id} className="group relative">
+                  <div className="flex items-center">
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start ${
+                        selectedConversationId === conversation.id
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground"
+                      } hover:text-foreground hover:bg-muted/50 ${
+                        isSidebarOpen || isMobile ? "px-3" : "px-2"
+                      }`}
+                      onClick={() => handleConversationSelect(conversation.id)}
+                    >
+                      <MessageSquare className="h-5 w-5 mr-3" />
+                      {(isSidebarOpen || isMobile) && (
+                        <span className="truncate text-sm flex-1">
+                          {conversation.title}
+                        </span>
+                      )}
+                    </Button>
+                    
+                    {/* 只在侧边栏展开或移动端时显示扩展按钮 */}
                     {(isSidebarOpen || isMobile) && (
-                      <span className="truncate text-sm">
-                        {conversation.title}
-                      </span>
+                      <div className="absolute right-1">
+                        <ConversationMenu conversationId={conversation.id} />
+                      </div>
                     )}
-                  </Button>
+                  </div>
                 </li>
               ))}
             </ul>
