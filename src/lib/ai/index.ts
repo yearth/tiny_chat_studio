@@ -1,6 +1,14 @@
 import { ModelFactory } from './modelFactory';
 import { AIMessage } from './types';
 
+// 导出模型实现
+export { OpenAIModel } from './models/openai';
+export { OpenRouterDeepseekModel } from './models/openrouter';
+
+// 导出客户端实现
+export { OpenAIClient } from './clients/openai';
+export { OpenRouterClient } from './clients/openrouter';
+
 /**
  * 生成AI响应
  * @param messages 消息历史

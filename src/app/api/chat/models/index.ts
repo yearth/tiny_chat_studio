@@ -3,6 +3,7 @@ import { logToConsole } from "../utils/logger";
 import { generateDeepSeekResponse } from "./deepseek";
 import { generateOpenAIResponse } from "./openai";
 import { generateQwenResponse } from "./qwen";
+import { generateOpenRouterResponse } from "./openrouter";
 
 /**
  * 根据模型生成响应的统一入口
@@ -27,6 +28,10 @@ export async function generateResponse(
     return generateOpenAIResponse(messages, modelId);
   } else if (modelId === "qwen-qwq-plus") {
     return generateQwenResponse(messages, modelId);
+  } else if (modelId.includes("deepseek/deepseek-chat:free")) {
+    console.log("enter v3");
+    // OpenRouter Deepseek 模型
+    return generateOpenRouterResponse(messages, modelId);
   } else {
     // 默认模拟响应
     logToConsole(`Using mock response for model: ${modelId}`);

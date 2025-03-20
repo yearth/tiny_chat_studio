@@ -1,5 +1,6 @@
 import { AIModel, AIModelConfig } from './types';
 import { OpenAIModel } from './models/openai';
+import { OpenRouterDeepseekModel } from './models/openrouter';
 
 /**
  * AI模型工厂类
@@ -11,6 +12,9 @@ export class ModelFactory {
   constructor() {
     // 注册默认模型
     this.registerModel(new OpenAIModel());
+    
+    // 注册 OpenRouter Deepseek 模型
+    this.registerModel(new OpenRouterDeepseekModel());
   }
   
   /**
