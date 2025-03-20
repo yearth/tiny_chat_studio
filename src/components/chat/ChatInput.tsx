@@ -25,8 +25,8 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
   };
 
   return (
-    <div className="p-4 border-t border-muted">
-      <div className="max-w-3xl mx-auto">
+    <div className="p-4 flex justify-center">
+      <div className="max-w-3xl w-full">
         {/* 模型选择器 */}
         <div className="mb-2 flex justify-end">
           <select

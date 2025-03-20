@@ -13,7 +13,6 @@ import { useConversations } from "@/hooks/useConversations";
 import { ScreenSize } from "@/types/layout";
 
 export default function Home() {
-  console.log("init project");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // 使用自定义钩子管理屏幕尺寸
@@ -62,15 +61,17 @@ export default function Home() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const renderChatContent = () => (
-    <>
-      <MessageList messages={messages} />
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        disabled={isLoadingMessages || isLoadingConversations}
-      />
-    </>
-  );
+  // 渲染聊天内容 - 现在分开返回消息列表和输入区域
+  const renderChatContent = () => [
+    // 第一个元素是消息列表（黑色部分）
+    <MessageList key="message-list" messages={messages} />,
+    // 第二个元素是输入区域（黄色部分）
+    <ChatInput
+      key="chat-input"
+      onSendMessage={handleSendMessage}
+      disabled={isLoadingMessages || isLoadingConversations}
+    />,
+  ];
 
   return screenSize === ScreenSize.MOBILE ? (
     <MobileLayout

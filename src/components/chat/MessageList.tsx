@@ -20,8 +20,8 @@ export function MessageList({ messages }: MessageListProps) {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="flex-1 overflow-y-auto p-4 flex justify-center">
+      <div className="max-w-3xl w-full">
         {messages.map((message) => (
           <div key={message.id} className="mb-6">
             <div className="flex items-start">
