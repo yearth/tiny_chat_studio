@@ -1,45 +1,64 @@
 # Tiny Chat Studio
 
-一个简洁的聊天应用，支持多对话管理和响应式设计。该项目使用 [Next.js](https://nextjs.org) 构建，并通过 [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) 初始化。
+一个简洁、高效的聊天应用，支持多对话管理和多种AI模型集成。
 
-## 主要特性
+## 项目特点
 
-- 响应式设计：自适应桌面端、平板和移动端
-- 多对话管理：支持创建和切换多个对话
-- 数据持久化：使用数据库存储对话和消息
-- 模块化架构：组件和业务逻辑分离，提高可维护性
+- **多对话管理**：创建和管理多个独立对话，轻松切换上下文
+- **响应式设计**：完美适配桌面端、平板和移动设备
+- **多模型支持**：集成多种AI大语言模型，满足不同场景需求
+- **数据持久化**：使用PostgreSQL数据库存储对话历史
+- **现代技术栈**：基于Next.js、React、Prisma和TypeScript构建
 
-## Getting Started
+## 快速开始
 
-First, run the development server:
+### 环境要求
 
+- Node.js 18+
+- PostgreSQL
+
+### 安装步骤
+
+1. 克隆仓库
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/tiny_chat_studio.git
+cd tiny_chat_studio
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 安装依赖
+```bash
+npm install
+# 或
+yarn install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. 配置环境变量
+```bash
+cp .env.example .env
+# 编辑.env文件，填入必要的配置信息
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. 初始化数据库
+```bash
+npx prisma migrate dev
+```
 
-## Learn More
+5. 启动开发服务器
+```bash
+npm run dev
+# 或
+yarn dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. 在浏览器中访问 [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 技术架构
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **前端**：React, Next.js, TailwindCSS
+- **后端**：Next.js API Routes
+- **数据库**：PostgreSQL, Prisma ORM
+- **类型安全**：TypeScript
 
-## Deploy on Vercel
+## 贡献指南
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+欢迎提交问题和拉取请求，共同改进这个项目！
