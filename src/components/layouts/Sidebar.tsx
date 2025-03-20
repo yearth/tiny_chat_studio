@@ -22,6 +22,7 @@ export interface SidebarProps {
   toggleSidebar: () => void;
   conversations: SimpleConversation[];
   onSelectConversation?: (conversationId: string) => void;
+  onNewConversation?: () => void; // 添加新对话的回调函数
   selectedConversationId?: string | null;
   variant?: "desktop" | "tablet" | "mobile";
   className?: string;
@@ -32,6 +33,7 @@ export function Sidebar({
   toggleSidebar,
   conversations,
   onSelectConversation,
+  onNewConversation,
   selectedConversationId,
   variant = "desktop",
   className = "",
@@ -51,24 +53,40 @@ export function Sidebar({
       }`;
 
   // 侧边栏样式
-  const sidebarStyle = isMobile || isTablet
-    ? {
-        boxShadow: isSidebarOpen ? "0 0 15px rgba(0, 0, 0, 0.3)" : "none",
-      }
-    : {};
+  const sidebarStyle =
+    isMobile || isTablet
+      ? {
+          boxShadow: isSidebarOpen ? "0 0 15px rgba(0, 0, 0, 0.3)" : "none",
+        }
+      : {};
 
   // 标题样式
-  const titleClasses = isDesktop || isTablet
-    ? `font-medium transition-opacity duration-200 ${
-        isSidebarOpen ? "opacity-100" : "opacity-0"
-      }`
-    : "font-medium";
+  const titleClasses =
+    isDesktop || isTablet
+      ? `font-medium transition-opacity duration-200 ${
+          isSidebarOpen ? "opacity-100" : "opacity-0"
+        }`
+      : "font-medium";
 
   // 新建聊天按钮
   const renderNewChatButton = () => {
+    // 处理新建对话的点击事件
+    const handleNewConversation = () => {
+      if (onNewConversation) {
+        onNewConversation();
+        // 如果是移动端，点击后关闭侧边栏
+        if (isMobile) {
+          toggleSidebar();
+        }
+      }
+    };
+
     if (isMobile || isSidebarOpen) {
       return (
-        <Button className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4">
+        <Button 
+          className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4 text-foreground"
+          onClick={handleNewConversation}
+        >
           <Plus className="h-5 w-5 mr-2" />
           <span>开启新对话</span>
         </Button>
@@ -76,8 +94,11 @@ export function Sidebar({
     } else {
       return (
         <div className="flex justify-center">
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
-            <Plus className="h-5 w-5 text-muted-foreground stroke-[2.5]" />
+          <div 
+            className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors"
+            onClick={handleNewConversation}
+          >
+            <Plus className="h-5 w-5 text-foreground stroke-[2.5]" />
           </div>
         </div>
       );
@@ -96,7 +117,10 @@ export function Sidebar({
   };
 
   return (
-    <div className={`${sidebarContainerClasses} ${className}`} style={sidebarStyle}>
+    <div
+      className={`${sidebarContainerClasses} ${className}`}
+      style={sidebarStyle}
+    >
       <div className="flex flex-col h-full">
         {/* 侧边栏头部 */}
         <div className="flex items-center p-4 h-16 border-b border-muted">
@@ -109,25 +133,16 @@ export function Sidebar({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className={titleClasses}>
-            <div className="flex items-center">
-              <span className="font-semibold">Gemini</span>
-              <ChevronDown className="h-4 w-4 ml-1" />
-            </div>
-            <div className="text-xs text-muted-foreground">2.0 Beta</div>
-          </div>
         </div>
 
         {/* 新建聊天按钮 */}
-        <div className="p-3">
-          {renderNewChatButton()}
-        </div>
+        <div className="p-3">{renderNewChatButton()}</div>
 
         {/* 对话列表 */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-2">
             <h3
-              className={`text-xs text-muted-foreground px-2 mb-2 ${
+              className={`text-xs text-foreground px-2 mb-2 ${
                 isSidebarOpen || isMobile ? "block" : "hidden"
               }`}
             >
@@ -167,40 +182,48 @@ export function Sidebar({
               <li>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                  className={`w-full justify-start text-foreground hover:text-foreground hover:bg-muted ${
                     isSidebarOpen || isMobile ? "px-3" : "px-2"
                   }`}
                 >
                   <History className="h-5 w-5 mr-3" />
-                  {(isSidebarOpen || isMobile) && <span className="text-sm">历史记录</span>}
+                  {(isSidebarOpen || isMobile) && (
+                    <span className="text-sm">历史记录</span>
+                  )}
                 </Button>
               </li>
               <li>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                  className={`w-full justify-start text-foreground hover:text-foreground hover:bg-muted ${
                     isSidebarOpen || isMobile ? "px-3" : "px-2"
                   }`}
                 >
                   <Sparkles className="h-5 w-5 mr-3" />
-                  {(isSidebarOpen || isMobile) && <span className="text-sm">小应用</span>}
+                  {(isSidebarOpen || isMobile) && (
+                    <span className="text-sm">小应用</span>
+                  )}
                 </Button>
               </li>
               <li>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800 ${
+                  className={`w-full justify-start text-foreground hover:text-foreground hover:bg-muted ${
                     isSidebarOpen || isMobile ? "px-3" : "px-2"
                   }`}
                 >
                   <Settings className="h-5 w-5 mr-3" />
-                  {(isSidebarOpen || isMobile) && <span className="text-sm">设置</span>}
+                  {(isSidebarOpen || isMobile) && (
+                    <span className="text-sm">设置</span>
+                  )}
                 </Button>
               </li>
               <li>
                 <div
                   className={`flex items-center ${
-                    isSidebarOpen || isMobile ? "px-3 py-2" : "justify-center py-2"
+                    isSidebarOpen || isMobile
+                      ? "px-3 py-2"
+                      : "justify-center py-2"
                   }`}
                 >
                   {(isSidebarOpen || isMobile) && (

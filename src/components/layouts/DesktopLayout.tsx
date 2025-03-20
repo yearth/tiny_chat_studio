@@ -9,6 +9,7 @@ interface DesktopLayoutProps {
   conversations: SimpleConversation[];
   children: React.ReactNode;
   onSelectConversation?: (conversationId: string) => void;
+  onNewConversation?: () => void; // 添加新对话的回调函数
   selectedConversationId?: string | null;
 }
 
@@ -18,6 +19,7 @@ export function DesktopLayout({
   conversations,
   children,
   onSelectConversation,
+  onNewConversation,
   selectedConversationId,
 }: DesktopLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
@@ -34,6 +36,7 @@ export function DesktopLayout({
         toggleSidebar={toggleSidebar}
         conversations={conversations}
         onSelectConversation={onSelectConversation}
+        onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
         variant="desktop"
       />

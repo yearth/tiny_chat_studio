@@ -9,6 +9,7 @@ interface MobileLayoutProps {
   conversations: SimpleConversation[];
   children: React.ReactNode;
   onSelectConversation?: (conversationId: string) => void;
+  onNewConversation?: () => void; // 添加新对话的回调函数
   selectedConversationId?: string | null;
 }
 
@@ -18,6 +19,7 @@ export function MobileLayout({
   conversations,
   children,
   onSelectConversation,
+  onNewConversation,
   selectedConversationId,
 }: MobileLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
@@ -45,6 +47,7 @@ export function MobileLayout({
         toggleSidebar={toggleSidebar}
         conversations={conversations}
         onSelectConversation={onSelectConversation}
+        onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
         variant="mobile"
       />

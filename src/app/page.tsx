@@ -61,6 +61,16 @@ export default function Home() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // 处理新建对话
+  const handleNewConversation = async () => {
+    // 创建一个新对话，使用默认标题
+    const newConversation = await addConversation('新对话');
+    if (newConversation) {
+      // 如果创建成功，选中该对话
+      selectConversation(newConversation.id);
+    }
+  };
+
   // 渲染聊天内容 - 现在分开返回消息列表和输入区域
   const renderChatContent = () => [
     // 第一个元素是消息列表（黑色部分）
@@ -79,6 +89,7 @@ export default function Home() {
       toggleSidebar={toggleSidebar}
       conversations={conversations}
       onSelectConversation={selectConversation}
+      onNewConversation={handleNewConversation}
       selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
@@ -89,6 +100,7 @@ export default function Home() {
       toggleSidebar={toggleSidebar}
       conversations={conversations}
       onSelectConversation={selectConversation}
+      onNewConversation={handleNewConversation}
       selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
@@ -99,6 +111,7 @@ export default function Home() {
       toggleSidebar={toggleSidebar}
       conversations={conversations}
       onSelectConversation={selectConversation}
+      onNewConversation={handleNewConversation}
       selectedConversationId={selectedConversationId}
     >
       {renderChatContent()}
