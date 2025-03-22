@@ -20,7 +20,6 @@ export function MessageList({
   messages,
   streamingMessageId,
   currentModelId,
-  conversationId,
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,11 +50,7 @@ export function MessageList({
                   {message.role === "user" ? (
                     "You"
                   ) : (
-                    <ModelDisplay
-                      modelId={currentModelId}
-                      messageId={message.id}
-                      defaultText="AI"
-                    />
+                    <ModelDisplay modelInfo={message.modelInfo} />
                   )}
                 </div>
                 {message.role === "assistant" &&

@@ -14,6 +14,9 @@ export async function GET(request: NextRequest, context: { params: tParams }) {
     const messages = await prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: "asc" },
+      include: {
+        model: true, // 包含关联的模型信息
+      },
     });
 
     return NextResponse.json({ messages });

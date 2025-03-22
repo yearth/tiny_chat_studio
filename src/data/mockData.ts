@@ -1,9 +1,11 @@
 import { Message } from "@/types/chat";
+import { AIModel } from "@prisma/client";
 
 // 本地消息类型，确保所有必需字段都有值
 export interface LocalMessage extends Message {
   id: string;
   createdAt: Date;
+  modelInfo?: AIModel; // 可选属性，用于显示模型信息
 }
 
 // 本地对话类型
