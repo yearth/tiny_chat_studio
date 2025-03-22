@@ -11,7 +11,8 @@ interface ConversationMenuProps {
 export function ConversationMenu({ conversationId }: ConversationMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { removeConversation, restoreDeletedConversation } = useConversationContext();
+  const { removeConversation, restoreDeletedConversation } =
+    useConversationContext();
 
   // 点击菜单按钮时切换菜单显示状态
   const toggleMenu = (e: React.MouseEvent) => {
@@ -40,15 +41,15 @@ export function ConversationMenu({ conversationId }: ConversationMenuProps) {
   const handleMenuItemClick = async (action: string, e: React.MouseEvent) => {
     e.stopPropagation(); // 阻止事件冒泡
     console.log(`执行操作: ${action}，对话ID: ${conversationId}`);
-    
+
     if (action === "delete") {
       try {
         // 先关闭菜单
         setIsMenuOpen(false);
-        
+
         // 尝试删除对话
         const success = await removeConversation(conversationId);
-        
+
         if (success) {
           // 显示带有撤销按钮的提示
           toast("对话已删除", {
@@ -57,7 +58,9 @@ export function ConversationMenu({ conversationId }: ConversationMenuProps) {
               label: "撤销",
               onClick: async () => {
                 // 尝试恢复对话
-                const restored = await restoreDeletedConversation(conversationId);
+                const restored = await restoreDeletedConversation(
+                  conversationId
+                );
                 if (restored) {
                   toast.success("对话已恢复");
                 } else {
@@ -65,9 +68,10 @@ export function ConversationMenu({ conversationId }: ConversationMenuProps) {
                 }
               },
             },
+            position: "bottom-left",
             icon: <Trash2 className="h-4 w-4" />,
           });
-          
+
           console.log(`成功删除对话: ${conversationId}`);
         } else {
           toast.error("删除对话失败");
