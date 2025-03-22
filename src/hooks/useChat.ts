@@ -8,7 +8,7 @@ import { ChatMessage, MessageRole, convertToFrontendMessage } from "@/types/pris
 
 interface UseChatOptions {
   initialMessages?: ChatMessage[];
-  conversationId?: string | null;
+  conversationId?: string | undefined;
 }
 
 // 消息状态类型
@@ -19,7 +19,7 @@ type MessageStatus = 'complete' | 'streaming';
  */
 export function useChat({
   initialMessages = [],
-  conversationId = null,
+  conversationId = undefined,
 }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,7 +127,7 @@ export function useChat({
             )
           );
         },
-        conversationId
+        conversationId || undefined
       );
 
       // 流式响应完成，更新消息状态
