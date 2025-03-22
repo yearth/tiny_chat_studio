@@ -22,8 +22,8 @@ export function useConversations({
   const [conversations, setConversations] =
     useState<LocalConversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
+    string | undefined
+  >(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,20 +80,24 @@ export function useConversations({
     try {
       // 调用删除对话的API（默认为伪删除）
       await deleteConversation(conversationId);
-      
+
       // 从列表中移除对话
-      setConversations((prev) => prev.filter(conv => conv.id !== conversationId));
-      
+      setConversations((prev) =>
+        prev.filter((conv) => conv.id !== conversationId)
+      );
+
       // 如果删除的是当前选中的对话，则选择列表中的第一个对话（如果有的话）
       if (selectedConversationId === conversationId) {
-        const remainingConversations = conversations.filter(conv => conv.id !== conversationId);
+        const remainingConversations = conversations.filter(
+          (conv) => conv.id !== conversationId
+        );
         if (remainingConversations.length > 0) {
           setSelectedConversationId(remainingConversations[0].id);
         } else {
-          setSelectedConversationId(null);
+          setSelectedConversationId(undefined);
         }
       }
-      
+
       return true;
     } catch (err) {
       console.error("删除对话错误:", err);
@@ -103,7 +107,7 @@ export function useConversations({
       setIsLoading(false);
     }
   };
-  
+
   // 恢复已删除的对话
   const restoreDeletedConversation = async (conversationId: string) => {
     setIsLoading(true);
@@ -112,10 +116,10 @@ export function useConversations({
     try {
       // 调用恢复对话的API
       await restoreConversation(conversationId);
-      
+
       // 重新加载对话列表
       await loadConversations();
-      
+
       return true;
     } catch (err) {
       console.error("恢复对话错误:", err);

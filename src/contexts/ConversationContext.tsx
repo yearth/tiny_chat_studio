@@ -5,7 +5,7 @@ interface ConversationContextProps {
   removeConversation: (conversationId: string) => Promise<boolean>;
   restoreDeletedConversation: (conversationId: string) => Promise<boolean>;
   conversations: LocalConversation[];
-  selectedConversationId: string | null;
+  selectedConversationId: string | undefined;
 }
 
 const ConversationContext = createContext<ConversationContextProps | undefined>(
@@ -21,7 +21,12 @@ export function ConversationProvider({
 }: ConversationContextProps & { children: React.ReactNode }) {
   return (
     <ConversationContext.Provider
-      value={{ removeConversation, restoreDeletedConversation, conversations, selectedConversationId }}
+      value={{
+        removeConversation,
+        restoreDeletedConversation,
+        conversations,
+        selectedConversationId,
+      }}
     >
       {children}
     </ConversationContext.Provider>
