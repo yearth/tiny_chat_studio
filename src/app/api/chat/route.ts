@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/client";
 import { generateResponse, generateStreamResponse } from "./models";
-
-// 添加一个简单的日志函数，确保日志能够正确输出
-function logToConsole(...args: any[]) {
-  console.log("[API ROUTE LOG]", new Date().toISOString(), ...args);
-}
+import { logToConsole } from "./utils/logger";
 
 export async function POST(req: NextRequest) {
   logToConsole("API route called");
@@ -78,7 +74,7 @@ export async function POST(req: NextRequest) {
           include: { messages: true },
         });
 
-        if (!conversation || conversation.userId !== userId) {
+        if (!conversation) {
           return NextResponse.json(
             { error: "Conversation not found or access denied" },
             { status: 404 }
@@ -237,14 +233,24 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = "";
-        
+
         try {
           // 使用生成器函数获取流式响应
-          for await (const chunk of generateStreamResponse(messages, modelToUse)) {
+          for await (const chunk of generateStreamResponse(
+            messages,
+            modelToUse
+          )) {
             fullResponse += chunk;
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk, conversationId: conversation.id })}\n\n`));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  chunk,
+                  conversationId: conversation.id,
+                })}\n\n`
+              )
+            );
           }
-          
+
           // 保存完整响应到数据库
           await prisma.message.create({
             data: {
@@ -253,12 +259,16 @@ export async function POST(req: NextRequest) {
               conversationId: conversation.id,
             },
           });
-          
+
           // 发送结束信号
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
         } catch (error) {
           logToConsole("Error in stream generation:", error);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ error: String(error) })}\n\n`
+            )
+          );
         } finally {
           controller.close();
         }
@@ -270,7 +280,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   } catch (error) {

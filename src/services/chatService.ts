@@ -1,3 +1,4 @@
+import { logToConsole } from "@/app/api/chat/utils/logger";
 import { Message } from "@/types/chat";
 
 interface ChatRequest {
@@ -70,6 +71,9 @@ export async function sendChatMessageStream(
   let fullResponse = "";
   let responseConversationId = conversationId;
 
+  logToConsole("sendChatMessageStream messages", messages);
+  logToConsole("sendChatMessageStream modelId", modelId);
+  logToConsole("sendChatMessageStream conversationId", conversationId);
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -85,6 +89,8 @@ export async function sendChatMessageStream(
         ...(conversationId && { conversationId }),
       } as ChatRequest),
     });
+
+    logToConsole("sendChatMessageStream response", response);
 
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
@@ -104,25 +110,25 @@ export async function sendChatMessageStream(
 
       // 解码二进制数据为文本
       const chunk = decoder.decode(value, { stream: true });
-      
+
       // 处理SSE格式的数据
       const lines = chunk.split("\n\n");
       for (const line of lines) {
         if (!line.trim() || !line.startsWith("data: ")) continue;
-        
+
         const data = line.replace("data: ", "").trim();
-        
+
         // 检查是否是结束信号
         if (data === "[DONE]") continue;
-        
+
         try {
           const parsed = JSON.parse(data) as StreamChunk;
-          
+
           // 如果有会话ID，保存它
           if (parsed.conversationId) {
             responseConversationId = parsed.conversationId;
           }
-          
+
           // 如果有内容块，处理它
           if (parsed.chunk) {
             fullResponse += parsed.chunk;
