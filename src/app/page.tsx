@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { MobileLayout } from "@/components/layouts/MobileLayout";
-import { TabletLayout } from "@/components/layouts/TabletLayout";
-import { DesktopLayout } from "@/components/layouts/DesktopLayout";
-import { LocalConversation } from "@/data/mockData";
-import { MessageList } from "@/components/chat/MessageList";
-import { ChatInput } from "@/components/chat/ChatInput";
+import { MobileLayout } from "@/components/layouts/mobile-layout";
+import { TabletLayout } from "@/components/layouts/tablet-layout";
+import { DesktopLayout } from "@/components/layouts/desktop-layout";
+import { MessageList } from "@/components/chat/message-list";
+import { ChatInput } from "@/components/chat/chat-input";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { useChat } from "@/hooks/useChat";
 import { useConversations } from "@/hooks/useConversations";
@@ -68,7 +67,7 @@ export default function Home() {
   // 处理新建对话
   const handleNewConversation = async () => {
     // 创建一个新对话，使用默认标题
-    const newConversation = await addConversation('新对话');
+    const newConversation = await addConversation("新对话");
     if (newConversation) {
       // 如果创建成功，选中该对话
       selectConversation(newConversation.id);
@@ -78,10 +77,10 @@ export default function Home() {
   // 渲染聊天内容 - 现在分开返回消息列表和输入区域
   const renderChatContent = () => [
     // 第一个元素是消息列表（黑色部分）
-    <MessageList 
-      key="message-list" 
-      messages={messages} 
-      streamingMessageId={streamingMessageId} 
+    <MessageList
+      key="message-list"
+      messages={messages}
+      streamingMessageId={streamingMessageId}
     />,
     // 第二个元素是输入区域（黄色部分）
     <ChatInput

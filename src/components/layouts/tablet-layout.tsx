@@ -1,9 +1,8 @@
 import React from "react";
-import { Sidebar, SimpleConversation } from "./Sidebar";
-import { AppLayout } from "./AppLayout";
-import { Header } from "./Header";
+import { Sidebar, SimpleConversation } from "./sidebar-layout";
+import { Header } from "./header-layout";
 
-interface DesktopLayoutProps {
+interface TabletLayoutProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   conversations: SimpleConversation[];
@@ -14,7 +13,7 @@ interface DesktopLayoutProps {
   isLoading?: boolean; // 添加加载状态
 }
 
-export function DesktopLayout({
+export function TabletLayout({
   isSidebarOpen,
   toggleSidebar,
   conversations,
@@ -23,9 +22,8 @@ export function DesktopLayout({
   onNewConversation,
   selectedConversationId,
   isLoading = false,
-}: DesktopLayoutProps) {
+}: TabletLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
-  // 假设子组件是一个数组，第一个元素是聊天内容，第二个元素是输入区域
   const childrenArray = React.Children.toArray(children);
   const chatContent = childrenArray[0];
   const inputArea = childrenArray[1];
@@ -41,21 +39,19 @@ export function DesktopLayout({
         onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
         isLoading={isLoading}
-        variant="desktop"
+        variant="tablet"
       />
 
-      {/* 蓝色、黑色和黄色部分由 AppLayout 处理 */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* 主内容区域 */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* 蓝色部分：Header */}
         <div className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-muted shadow-sm">
-          <Header toggleSidebar={toggleSidebar} variant="desktop" />
+          <Header toggleSidebar={toggleSidebar} variant="tablet" />
         </div>
-        
+
         {/* 黑色部分：聊天内容 */}
-        <div className="flex-1 overflow-y-auto w-full">
-          {chatContent}
-        </div>
-        
+        <div className="flex-1 overflow-y-auto w-full">{chatContent}</div>
+
         {/* 黄色部分：输入区域 */}
         <div className="sticky bottom-0 z-20 w-full bg-background/80 backdrop-blur-sm border-t border-muted">
           {inputArea}

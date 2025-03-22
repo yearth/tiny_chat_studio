@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { ConversationMenu } from "@/components/ui/ConversationMenu";
+import { ConversationMenu } from "@/components/ui/conversation-menu";
 import { ConversationSkeleton } from "@/components/ui/conversation-skeleton";
 
 // 使用通用的类型定义
@@ -87,7 +87,7 @@ export function Sidebar({
 
     if (isMobile || isSidebarOpen) {
       return (
-        <Button 
+        <Button
           className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 transition-all justify-start px-4 text-foreground"
           onClick={handleNewConversation}
         >
@@ -98,7 +98,7 @@ export function Sidebar({
     } else {
       return (
         <div className="flex justify-center">
-          <div 
+          <div
             className="w-10 h-10 rounded-full bg-muted flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors"
             onClick={handleNewConversation}
           >
@@ -152,7 +152,7 @@ export function Sidebar({
             >
               近期对话
             </h3>
-            
+
             {isLoading ? (
               // 显示骨架屏
               <ConversationSkeleton />
@@ -171,7 +171,9 @@ export function Sidebar({
                         } hover:text-foreground hover:bg-muted/50 ${
                           isSidebarOpen || isMobile ? "px-3" : "px-2"
                         }`}
-                        onClick={() => handleConversationSelect(conversation.id)}
+                        onClick={() =>
+                          handleConversationSelect(conversation.id)
+                        }
                       >
                         <MessageSquare className="h-5 w-5 mr-3" />
                         {(isSidebarOpen || isMobile) && (
@@ -180,7 +182,7 @@ export function Sidebar({
                           </span>
                         )}
                       </Button>
-                      
+
                       {/* 只在侧边栏展开或移动端时显示扩展按钮 */}
                       {(isSidebarOpen || isMobile) && (
                         <div className="absolute right-1">

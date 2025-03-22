@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { User, Bot } from "lucide-react";
 import { LocalMessage } from "@/data/mockData";
-import { MessageWithThinking } from "./MessageWithThinking";
+import { MessageWithThinking } from "./message-with-thinking";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
@@ -13,7 +13,10 @@ interface MessageListProps {
  * 消息列表组件
  * 显示用户和AI的消息，并自动滚动到最新消息
  */
-export function MessageList({ messages, streamingMessageId }: MessageListProps) {
+export function MessageList({
+  messages,
+  streamingMessageId,
+}: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 当消息更新时，滚动到底部
