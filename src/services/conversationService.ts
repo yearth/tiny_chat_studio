@@ -138,14 +138,20 @@ export async function saveMessageToConversation(
 /**
  * 删除对话
  * @param conversationId 对话ID
+ * @param permanent 是否永久删除，默认为伪删除
  * @returns 删除结果
  */
 export async function deleteConversation(
-  conversationId: string
+  conversationId: string,
+  permanent: boolean = false
 ): Promise<{ success: boolean }> {
   try {
     // 向API发送删除对话请求
-    const response = await fetch(`/api/conversations/${conversationId}`, {
+    const url = permanent
+      ? `/api/conversations/${conversationId}?permanent=true`
+      : `/api/conversations/${conversationId}`;
+
+    const response = await fetch(url, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -159,6 +165,35 @@ export async function deleteConversation(
     return { success: true };
   } catch (error) {
     console.error("删除对话错误:", error);
+    throw error;
+  }
+}
+
+/**
+ * 恢复已删除的对话
+ * @param conversationId 对话ID
+ * @returns 恢复结果
+ */
+export async function restoreConversation(
+  conversationId: string
+): Promise<{ success: boolean }> {
+  try {
+    // 向API发送恢复对话请求
+    const response = await fetch(`/api/conversations/${conversationId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "restore" }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`恢复对话失败: ${response.status}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("恢复对话错误:", error);
     throw error;
   }
 }

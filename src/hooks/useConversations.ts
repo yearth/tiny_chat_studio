@@ -4,6 +4,7 @@ import {
   getUserConversations,
   createConversation,
   deleteConversation,
+  restoreConversation,
 } from "@/services/conversationService";
 
 interface UseConversationsOptions {
@@ -77,7 +78,7 @@ export function useConversations({
     setError(null);
 
     try {
-      // 调用删除对话的API
+      // 调用删除对话的API（默认为伪删除）
       await deleteConversation(conversationId);
       
       // 从列表中移除对话
@@ -102,6 +103,28 @@ export function useConversations({
       setIsLoading(false);
     }
   };
+  
+  // 恢复已删除的对话
+  const restoreDeletedConversation = async (conversationId: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 调用恢复对话的API
+      await restoreConversation(conversationId);
+      
+      // 重新加载对话列表
+      await loadConversations();
+      
+      return true;
+    } catch (err) {
+      console.error("恢复对话错误:", err);
+      setError(err instanceof Error ? err.message : "恢复对话失败");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 初始加载对话列表
   useEffect(() => {
@@ -119,6 +142,7 @@ export function useConversations({
     addConversation,
     selectConversation,
     removeConversation,
+    restoreDeletedConversation,
     setConversations,
   };
 }

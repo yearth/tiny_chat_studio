@@ -28,6 +28,7 @@ export default function Home() {
     selectConversation,
     addConversation,
     removeConversation,
+    restoreDeletedConversation,
   } = useConversations({
     userId: "cm8h2lozw0000jsz3jff2qk1h", // 使用 seed 脚本创建的测试用户ID
   });
@@ -93,6 +94,7 @@ export default function Home() {
   return (
     <ConversationProvider
       removeConversation={removeConversation}
+      restoreDeletedConversation={restoreDeletedConversation}
       conversations={conversations}
       selectedConversationId={selectedConversationId}
     >

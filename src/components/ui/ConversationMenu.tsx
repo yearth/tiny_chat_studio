@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MoreVertical, Pin, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Pin, Edit, Trash2, Undo } from "lucide-react";
 import { Button } from "./button";
 import { useConversationContext } from "@/contexts/ConversationContext";
+import { toast } from "sonner";
 
 interface ConversationMenuProps {
   conversationId: string;
@@ -10,7 +11,7 @@ interface ConversationMenuProps {
 export function ConversationMenu({ conversationId }: ConversationMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { removeConversation } = useConversationContext();
+  const { removeConversation, restoreDeletedConversation } = useConversationContext();
 
   // 点击菜单按钮时切换菜单显示状态
   const toggleMenu = (e: React.MouseEvent) => {
@@ -42,18 +43,43 @@ export function ConversationMenu({ conversationId }: ConversationMenuProps) {
     
     if (action === "delete") {
       try {
+        // 先关闭菜单
+        setIsMenuOpen(false);
+        
+        // 尝试删除对话
         const success = await removeConversation(conversationId);
+        
         if (success) {
+          // 显示带有撤销按钮的提示
+          toast("对话已删除", {
+            description: "对话已被移到回收站",
+            action: {
+              label: "撤销",
+              onClick: async () => {
+                // 尝试恢复对话
+                const restored = await restoreDeletedConversation(conversationId);
+                if (restored) {
+                  toast.success("对话已恢复");
+                } else {
+                  toast.error("恢复对话失败");
+                }
+              },
+            },
+            icon: <Trash2 className="h-4 w-4" />,
+          });
+          
           console.log(`成功删除对话: ${conversationId}`);
         } else {
+          toast.error("删除对话失败");
           console.error(`删除对话失败: ${conversationId}`);
         }
       } catch (error) {
+        toast.error("删除对话时出错");
         console.error("删除对话时出错:", error);
       }
+    } else {
+      setIsMenuOpen(false);
     }
-    
-    setIsMenuOpen(false);
   };
 
   return (

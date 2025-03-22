@@ -3,6 +3,7 @@ import { LocalConversation } from "@/data/mockData";
 
 interface ConversationContextProps {
   removeConversation: (conversationId: string) => Promise<boolean>;
+  restoreDeletedConversation: (conversationId: string) => Promise<boolean>;
   conversations: LocalConversation[];
   selectedConversationId: string | null;
 }
@@ -14,12 +15,13 @@ const ConversationContext = createContext<ConversationContextProps | undefined>(
 export function ConversationProvider({
   children,
   removeConversation,
+  restoreDeletedConversation,
   conversations,
   selectedConversationId,
 }: ConversationContextProps & { children: React.ReactNode }) {
   return (
     <ConversationContext.Provider
-      value={{ removeConversation, conversations, selectedConversationId }}
+      value={{ removeConversation, restoreDeletedConversation, conversations, selectedConversationId }}
     >
       {children}
     </ConversationContext.Provider>
