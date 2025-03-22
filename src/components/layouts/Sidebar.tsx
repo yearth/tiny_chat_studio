@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ConversationMenu } from "@/components/ui/ConversationMenu";
+import { ConversationSkeleton } from "@/components/ui/conversation-skeleton";
 
 // 使用通用的类型定义
 export type SimpleConversation = {
@@ -24,9 +25,10 @@ export interface SidebarProps {
   conversations: SimpleConversation[];
   onSelectConversation?: (conversationId: string) => void;
   onNewConversation?: () => void; // 添加新对话的回调函数
-  selectedConversationId?: string | null;
+  selectedConversationId?: string | undefined;
   variant?: "desktop" | "tablet" | "mobile";
   className?: string;
+  isLoading?: boolean; // 添加加载状态属性
 }
 
 export function Sidebar({
@@ -38,6 +40,7 @@ export function Sidebar({
   selectedConversationId,
   variant = "desktop",
   className = "",
+  isLoading = false, // 默认不加载
 }: SidebarProps) {
   // 根据不同设备类型设置不同的样式
   const isMobile = variant === "mobile";
@@ -149,39 +152,46 @@ export function Sidebar({
             >
               近期对话
             </h3>
-            <ul className="space-y-1">
-              {conversations.map((conversation) => (
-                <li key={conversation.id} className="group relative">
-                  <div className="flex items-center">
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start ${
-                        selectedConversationId === conversation.id
-                          ? "bg-muted text-foreground"
-                          : "text-muted-foreground"
-                      } hover:text-foreground hover:bg-muted/50 ${
-                        isSidebarOpen || isMobile ? "px-3" : "px-2"
-                      }`}
-                      onClick={() => handleConversationSelect(conversation.id)}
-                    >
-                      <MessageSquare className="h-5 w-5 mr-3" />
+            
+            {isLoading ? (
+              // 显示骨架屏
+              <ConversationSkeleton />
+            ) : (
+              // 显示对话列表
+              <ul className="space-y-1">
+                {conversations.map((conversation) => (
+                  <li key={conversation.id} className="group relative">
+                    <div className="flex items-center">
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start ${
+                          selectedConversationId === conversation.id
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground"
+                        } hover:text-foreground hover:bg-muted/50 ${
+                          isSidebarOpen || isMobile ? "px-3" : "px-2"
+                        }`}
+                        onClick={() => handleConversationSelect(conversation.id)}
+                      >
+                        <MessageSquare className="h-5 w-5 mr-3" />
+                        {(isSidebarOpen || isMobile) && (
+                          <span className="truncate text-sm flex-1">
+                            {conversation.title}
+                          </span>
+                        )}
+                      </Button>
+                      
+                      {/* 只在侧边栏展开或移动端时显示扩展按钮 */}
                       {(isSidebarOpen || isMobile) && (
-                        <span className="truncate text-sm flex-1">
-                          {conversation.title}
-                        </span>
+                        <div className="absolute right-1">
+                          <ConversationMenu conversationId={conversation.id} />
+                        </div>
                       )}
-                    </Button>
-                    
-                    {/* 只在侧边栏展开或移动端时显示扩展按钮 */}
-                    {(isSidebarOpen || isMobile) && (
-                      <div className="absolute right-1">
-                        <ConversationMenu conversationId={conversation.id} />
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

@@ -106,6 +106,7 @@ export default function Home() {
           onSelectConversation={selectConversation}
           onNewConversation={handleNewConversation}
           selectedConversationId={selectedConversationId}
+          isLoading={isLoadingConversations}
         >
           {renderChatContent()}
         </MobileLayout>
@@ -117,6 +118,7 @@ export default function Home() {
           onSelectConversation={selectConversation}
           onNewConversation={handleNewConversation}
           selectedConversationId={selectedConversationId}
+          isLoading={isLoadingConversations}
         >
           {renderChatContent()}
         </TabletLayout>
@@ -128,6 +130,7 @@ export default function Home() {
           onSelectConversation={selectConversation}
           onNewConversation={handleNewConversation}
           selectedConversationId={selectedConversationId}
+          isLoading={isLoadingConversations}
         >
           {renderChatContent()}
         </DesktopLayout>

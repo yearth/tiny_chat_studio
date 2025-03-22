@@ -9,7 +9,8 @@ interface TabletLayoutProps {
   children: React.ReactNode;
   onSelectConversation?: (conversationId: string) => void;
   onNewConversation?: () => void; // 添加新对话的回调函数
-  selectedConversationId?: string | null;
+  selectedConversationId?: string | undefined;
+  isLoading?: boolean; // 添加加载状态
 }
 
 export function TabletLayout({
@@ -20,6 +21,7 @@ export function TabletLayout({
   onSelectConversation,
   onNewConversation,
   selectedConversationId,
+  isLoading = false,
 }: TabletLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
   const childrenArray = React.Children.toArray(children);
@@ -36,6 +38,7 @@ export function TabletLayout({
         onSelectConversation={onSelectConversation}
         onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
+        isLoading={isLoading}
         variant="tablet"
       />
 

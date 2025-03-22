@@ -10,7 +10,8 @@ interface MobileLayoutProps {
   children: React.ReactNode;
   onSelectConversation?: (conversationId: string) => void;
   onNewConversation?: () => void; // 添加新对话的回调函数
-  selectedConversationId?: string | null;
+  selectedConversationId?: string | undefined;
+  isLoading?: boolean; // 添加加载状态
 }
 
 export function MobileLayout({
@@ -21,6 +22,7 @@ export function MobileLayout({
   onSelectConversation,
   onNewConversation,
   selectedConversationId,
+  isLoading = false,
 }: MobileLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
   const childrenArray = React.Children.toArray(children);
@@ -49,6 +51,7 @@ export function MobileLayout({
         onSelectConversation={onSelectConversation}
         onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
+        isLoading={isLoading}
         variant="mobile"
       />
 

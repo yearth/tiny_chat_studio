@@ -10,7 +10,8 @@ interface DesktopLayoutProps {
   children: React.ReactNode;
   onSelectConversation?: (conversationId: string) => void;
   onNewConversation?: () => void; // 添加新对话的回调函数
-  selectedConversationId?: string | null;
+  selectedConversationId?: string | undefined;
+  isLoading?: boolean; // 添加加载状态
 }
 
 export function DesktopLayout({
@@ -21,6 +22,7 @@ export function DesktopLayout({
   onSelectConversation,
   onNewConversation,
   selectedConversationId,
+  isLoading = false,
 }: DesktopLayoutProps) {
   // 将子组件内容拆分为聊天内容和输入区域
   // 假设子组件是一个数组，第一个元素是聊天内容，第二个元素是输入区域
@@ -38,6 +40,7 @@ export function DesktopLayout({
         onSelectConversation={onSelectConversation}
         onNewConversation={onNewConversation}
         selectedConversationId={selectedConversationId}
+        isLoading={isLoading}
         variant="desktop"
       />
 
