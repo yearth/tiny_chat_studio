@@ -109,7 +109,6 @@ export async function POST(req: NextRequest) {
         conversation = await prisma.conversation.create({
           data: {
             userId,
-            modelId: selectedModelId,
             title: messages[0]?.content.substring(0, 30) || "New Conversation",
           },
         });
@@ -126,8 +125,8 @@ export async function POST(req: NextRequest) {
     // 检查所选模型的API密钥是否配置
     let apiKeyConfigured = false;
 
-    // 使用用户选择的模型ID（如果有），否则使用对话中的模型ID
-    const modelToUse = modelId ? modelId : conversation.modelId;
+    // 使用用户选择的模型ID
+    const modelToUse = modelId || selectedModelId;
     logToConsole(`Model to use for API key check: ${modelToUse}`);
 
     // 根据不同的模型检查相应的API密钥
@@ -251,12 +250,13 @@ export async function POST(req: NextRequest) {
             );
           }
 
-          // 保存完整响应到数据库
+          // 保存完整响应到数据库，并关联使用的模型
           await prisma.message.create({
             data: {
               content: fullResponse,
               role: "assistant",
               conversationId: conversation.id,
+              modelId: modelToUse, // 保存使用的模型ID
             },
           });
 

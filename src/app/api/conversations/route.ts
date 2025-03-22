@@ -7,6 +7,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const includeDeleted = searchParams.get("includeDeleted") === "true";
+    console.log(
+      "🔍 ~ GET ~ src/app/api/conversations/route.ts:9 ~ includeDeleted:",
+      includeDeleted
+    );
 
     if (!userId) {
       return NextResponse.json({ error: "缺少用户ID参数" }, { status: 400 });
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, modelId = "gpt-3.5-turbo" } = body;
+    const { userId, title } = body;
 
     if (!userId) {
       return NextResponse.json({ error: "缺少用户ID参数" }, { status: 400 });
@@ -53,7 +57,6 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         title: title || "新对话", // 如果没有提供标题，使用默认标题
-        modelId, // 使用提供的模型或默认模型
       },
     });
 

@@ -7,15 +7,22 @@ import { availableModels } from "@/data/models";
 interface ChatInputProps {
   onSendMessage: (message: string, modelId: string) => Promise<void>;
   disabled?: boolean;
+  onModelChange?: (modelId: string) => void; // 添加模型变化回调
+  initialModelId?: string; // 初始模型ID
 }
 
 /**
  * 聊天输入组件
  * 包含输入框、发送按钮和模型选择器
  */
-export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
+export function ChatInput({ 
+  onSendMessage, 
+  disabled = false, 
+  onModelChange,
+  initialModelId = availableModels[0].id
+}: ChatInputProps) {
   const [input, setInput] = useState("");
-  const [selectedModel, setSelectedModel] = useState(availableModels[0].id);
+  const [selectedModel, setSelectedModel] = useState(initialModelId);
 
   const handleSend = async () => {
     if (input.trim() && !disabled) {
@@ -31,7 +38,13 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
         <div className="mb-2 flex justify-end">
           <select
             value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+            onChange={(e) => {
+              const newModelId = e.target.value;
+              setSelectedModel(newModelId);
+              if (onModelChange) {
+                onModelChange(newModelId);
+              }
+            }}
             className="bg-muted text-foreground text-sm border border-input rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={disabled}
           >

@@ -3,10 +3,13 @@ import { User, Bot } from "lucide-react";
 import { LocalMessage } from "@/data/mockData";
 import { MessageWithThinking } from "./message-with-thinking";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ModelDisplay } from "./model-display";
 
 interface MessageListProps {
   messages: LocalMessage[];
   streamingMessageId?: string | null;
+  currentModelId?: string; // 当前选择的模型 ID（用于新消息）
+  conversationId?: string; // 当前对话 ID（用于获取对话的模型信息）
 }
 
 /**
@@ -16,6 +19,8 @@ interface MessageListProps {
 export function MessageList({
   messages,
   streamingMessageId,
+  currentModelId,
+  conversationId,
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +48,15 @@ export function MessageList({
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium mb-1">
-                  {message.role === "user" ? "You" : "Gemini"}
+                  {message.role === "user" ? (
+                    "You"
+                  ) : (
+                    <ModelDisplay
+                      modelId={currentModelId}
+                      messageId={message.id}
+                      defaultText="AI"
+                    />
+                  )}
                 </div>
                 {message.role === "assistant" &&
                 message.content.includes("**思考过程**:") ? (

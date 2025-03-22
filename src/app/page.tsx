@@ -14,6 +14,7 @@ import { ConversationProvider } from "@/contexts/ConversationContext";
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentModelId, setCurrentModelId] = useState(""); // 添加当前选择的模型 ID 状态
 
   // 使用自定义钩子管理屏幕尺寸
   const screenSize = useScreenSize();
@@ -29,7 +30,7 @@ export default function Home() {
     removeConversation,
     restoreDeletedConversation,
   } = useConversations({
-    userId: "cm8h2lozw0000jsz3jff2qk1h", // 使用 seed 脚本创建的测试用户ID
+    userId: "cm8ke3nrj0000jsxy4tsfv7gy", // 使用 seed 脚本创建的测试用户ID
   });
 
   // 使用自定义钩子管理当前对话的消息
@@ -74,6 +75,11 @@ export default function Home() {
     }
   };
 
+  // 处理模型变化
+  const handleModelChange = (modelId: string) => {
+    setCurrentModelId(modelId);
+  };
+
   // 渲染聊天内容 - 现在分开返回消息列表和输入区域
   const renderChatContent = () => [
     // 第一个元素是消息列表（黑色部分）
@@ -81,12 +87,16 @@ export default function Home() {
       key="message-list"
       messages={messages}
       streamingMessageId={streamingMessageId}
+      currentModelId={currentModelId}
+      conversationId={selectedConversationId}
     />,
     // 第二个元素是输入区域（黄色部分）
     <ChatInput
       key="chat-input"
       onSendMessage={handleSendMessage}
       disabled={isLoadingMessages || isLoadingConversations}
+      onModelChange={handleModelChange}
+      initialModelId={currentModelId}
     />,
   ];
 

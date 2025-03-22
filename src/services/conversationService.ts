@@ -70,13 +70,11 @@ export async function getConversationMessages(
  * 创建新对话
  * @param userId 用户ID
  * @param title 对话标题
- * @param modelId 模型ID
  * @returns 创建的对话
  */
 export async function createConversation(
   userId: string,
-  title: string,
-  modelId?: string
+  title: string
 ): Promise<Conversation> {
   try {
     // 向API发送创建对话请求
@@ -85,7 +83,7 @@ export async function createConversation(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId, title, modelId }),
+      body: JSON.stringify({ userId, title }),
     });
 
     if (!response.ok) {
