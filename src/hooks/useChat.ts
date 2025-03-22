@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { sendChatMessage } from "@/services/chatService";
+import { sendChatMessage, sendChatMessageStream } from "@/services/chatService";
 import {
   getConversationMessages,
   saveMessageToConversation,
@@ -11,6 +11,9 @@ interface UseChatOptions {
   conversationId?: string | null;
 }
 
+// 消息状态类型
+type MessageStatus = 'complete' | 'streaming';
+
 /**
  * 自定义钩子，用于管理聊天消息和发送消息
  */
@@ -21,6 +24,8 @@ export function useChat({
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [messageStatus, setMessageStatus] = useState<Record<string, MessageStatus>>({});
 
   // 当对话ID变化时，加载该对话的消息
   useEffect(() => {
@@ -91,28 +96,49 @@ export function useChat({
         );
       }
 
-      // 发送消息到API
-      const response = await sendChatMessage(
-        [...messages, userMessage],
-        modelId
-      );
-
-      // 创建AI响应消息
+      // 创建AI响应的初始消息（空内容）
+      const aiMessageId = `temp-assistant-${Date.now()}`;
       const aiMessage: ChatMessage = {
-        id: `temp-assistant-${Date.now()}`, // 临时ID
-        content: response.message,
+        id: aiMessageId,
+        content: "", // 初始为空，将通过流式更新
         role: "assistant" as MessageRole,
         createdAt: new Date(),
       };
 
-      // 添加AI响应到消息列表
+      // 添加初始的AI响应到消息列表
       setMessages((prev) => [...prev, aiMessage]);
+      
+      // 设置消息状态为流式中
+      setStreamingMessageId(aiMessageId);
+      setMessageStatus(prev => ({ ...prev, [aiMessageId]: 'streaming' }));
 
-      // 如果有对话ID，保存AI响应到数据库
+      // 使用流式 API 发送消息
+      let fullResponse = "";
+      fullResponse = await sendChatMessageStream(
+        [...messages, userMessage],
+        modelId,
+        (chunk) => {
+          // 每收到一个文本块，就更新消息内容
+          setMessages((prev) => 
+            prev.map(msg => 
+              msg.id === aiMessageId 
+                ? { ...msg, content: msg.content + chunk } 
+                : msg
+            )
+          );
+        },
+        conversationId
+      );
+
+      // 流式响应完成，更新消息状态
+      setStreamingMessageId(null);
+      setMessageStatus(prev => ({ ...prev, [aiMessageId]: 'complete' }));
+
+      // 如果有对话ID，保存完整的AI响应到数据库
       if (conversationId) {
         const savedMsg = await saveMessageToConversation(conversationId, {
-          content: aiMessage.content,
-          role: aiMessage.role
+          content: fullResponse,
+          role: "assistant" as MessageRole
         });
         
         // 将保存的消息转换为前端消息格式
@@ -120,7 +146,7 @@ export function useChat({
         
         // 替换临时消息为保存的消息
         setMessages(prev => 
-          prev.map(msg => msg.id === aiMessage.id ? savedAiMessage : msg)
+          prev.map(msg => msg.id === aiMessageId ? savedAiMessage : msg)
         );
       }
     } catch (err) {
@@ -137,6 +163,9 @@ export function useChat({
 
       // 添加错误消息到列表
       setMessages((prev) => [...prev, errorMessage]);
+      
+      // 清除流式状态
+      setStreamingMessageId(null);
     } finally {
       setIsLoading(false);
     }
@@ -149,5 +178,7 @@ export function useChat({
     error,
     setMessages,
     loadMessages,
+    streamingMessageId,
+    messageStatus,
   };
 }

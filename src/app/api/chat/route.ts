@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/client";
-import { generateResponse } from "./models";
+import { generateResponse, generateStreamResponse } from "./models";
 
 // 添加一个简单的日志函数，确保日志能够正确输出
 function logToConsole(...args: any[]) {
@@ -232,26 +232,46 @@ export async function POST(req: NextRequest) {
     // 使用用户选择的模型ID（modelToUse）而不是对话中存储的模型ID（conversation.modelId）
     logToConsole(`Generating response using model: ${modelToUse}`);
 
-    // 生成响应
-    const aiResponse = await generateResponse(messages, modelToUse);
+    // 创建流式响应
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        let fullResponse = "";
+        
+        try {
+          // 使用生成器函数获取流式响应
+          for await (const chunk of generateStreamResponse(messages, modelToUse)) {
+            fullResponse += chunk;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk, conversationId: conversation.id })}\n\n`));
+          }
+          
+          // 保存完整响应到数据库
+          await prisma.message.create({
+            data: {
+              content: fullResponse,
+              role: "assistant",
+              conversationId: conversation.id,
+            },
+          });
+          
+          // 发送结束信号
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+        } catch (error) {
+          logToConsole("Error in stream generation:", error);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
+        } finally {
+          controller.close();
+        }
+      },
+    });
 
-    // 保存AI响应到数据库
-    try {
-      await prisma.message.create({
-        data: {
-          content: aiResponse,
-          role: "assistant",
-          conversationId: conversation.id,
-        },
-      });
-    } catch (dbError) {
-      logToConsole("Database error saving AI response:", dbError);
-    }
-
-    logToConsole("Sending response");
-    return NextResponse.json({
-      message: aiResponse,
-      conversationId: conversation.id,
+    logToConsole("Sending stream response");
+    return new NextResponse(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      },
     });
   } catch (error) {
     logToConsole("Error in chat API:", error);

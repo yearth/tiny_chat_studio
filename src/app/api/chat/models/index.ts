@@ -39,3 +39,46 @@ export async function generateResponse(
     return `这是对"${lastUserMessage.content}"的模拟响应。模型 ${modelId} 尚未实现实际API调用。`;
   }
 }
+
+/**
+ * 流式生成响应的生成器函数
+ * @param messages 消息列表
+ * @param modelId 模型ID
+ * @yields 生成的响应文本片段
+ */
+export async function* generateStreamResponse(
+  messages: AIMessage[],
+  modelId: string
+): AsyncGenerator<string> {
+  // 获取用户最后一条消息
+  const lastUserMessage = messages[messages.length - 1];
+  
+  logToConsole("Streaming response for model:", modelId);
+  
+  // 由于我们还没有实现真正的流式API调用，这里使用模拟的流式响应
+  // 在实际实现中，应该调用各个模型的流式API
+  
+  // 模拟的响应文本
+  let fullResponse = "";
+  
+  if (modelId === "deepseek-r1") {
+    fullResponse = await generateDeepSeekResponse(messages, modelId);
+  } else if (modelId === "gpt-3.5-turbo" || modelId === "gpt-4") {
+    fullResponse = await generateOpenAIResponse(messages, modelId);
+  } else if (modelId === "qwen-qwq-plus") {
+    fullResponse = await generateQwenResponse(messages, modelId);
+  } else if (modelId.includes("deepseek/deepseek-chat:free")) {
+    fullResponse = await generateOpenRouterResponse(messages, modelId);
+  } else {
+    fullResponse = `这是对"${lastUserMessage.content}"的模拟流式响应。模型 ${modelId} 尚未实现实际API调用。`;
+  }
+  
+  // 将完整响应分成小块，模拟流式输出
+  const chunks = fullResponse.split(" ");
+  
+  for (const word of chunks) {
+    // 添加随机延迟，模拟真实的流式输出
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 50 + 10));
+    yield word + " ";
+  }
+}
