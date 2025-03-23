@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/server/db/client";
+import { MessageWithModel } from "@/types/models";
 
 export async function GET(
   request: Request,
@@ -21,7 +20,7 @@ export async function GET(
     const message = await prisma.message.findUnique({
       where: { id: messageId },
       include: { model: true },
-    });
+    }) as MessageWithModel | null;
 
     if (!message) {
       return NextResponse.json(
@@ -30,13 +29,8 @@ export async function GET(
       );
     }
 
-    // 如果消息没有关联模型，返回空
-    if (!message.model) {
-      return NextResponse.json(null);
-    }
-
-    // 返回模型信息
-    return NextResponse.json(message.model);
+    // 返回模型信息（如果存在）
+    return NextResponse.json(message.model || null);
   } catch (error) {
     console.error("获取模型信息错误:", error);
     return NextResponse.json(

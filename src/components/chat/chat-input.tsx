@@ -3,6 +3,9 @@ import { Send, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { availableModels } from "@/data/models";
+import { useUsageLimit } from "@/hooks/useUsageLimit";
+import { LoginDialog } from "@/components/auth/login-dialog";
+import { useSession } from "next-auth/react";
 
 interface ChatInputProps {
   onSendMessage: (message: string, modelId: string) => Promise<void>;
@@ -23,9 +26,19 @@ export function ChatInput({
 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState(initialModelId);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const { data: session } = useSession();
+  const { usageCount, isLimitReached, incrementUsage, limit } = useUsageLimit();
 
   const handleSend = async () => {
     if (input.trim() && !disabled) {
+      // 检查使用限制
+      const canSend = await incrementUsage();
+      if (!canSend) {
+        setShowLoginDialog(true);
+        return;
+      }
+      
       await onSendMessage(input, selectedModel);
       setInput("");
     }
@@ -34,8 +47,23 @@ export function ChatInput({
   return (
     <div className="p-4 flex justify-center">
       <div className="max-w-3xl w-full">
-        {/* 模型选择器 */}
-        <div className="mb-2 flex justify-end">
+        {/* 使用量显示 */}
+        <div className="mb-2 flex justify-between items-center">
+          <div className="text-xs text-muted-foreground">
+            今日使用: {usageCount}/{limit} 次
+            {!session && (
+              <Button 
+                variant="link" 
+                className="text-xs p-0 h-auto ml-2" 
+                onClick={() => setShowLoginDialog(true)}
+              >
+                登录获取更多次数
+              </Button>
+            )}
+          </div>
+          
+          {/* 模型选择器 */}
+          <div className="flex justify-end">
           <select
             value={selectedModel}
             onChange={(e) => {
@@ -54,6 +82,7 @@ export function ChatInput({
               </option>
             ))}
           </select>
+          </div>
         </div>
         <div className="relative rounded-xl bg-muted focus-within:ring-1 focus-within:ring-primary">
           <Input
@@ -93,6 +122,13 @@ export function ChatInput({
           </div>
         </div>
       </div>
+      
+      {/* 登录对话框 */}
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        reason="usage_limit"
+      />
     </div>
   );
 }
