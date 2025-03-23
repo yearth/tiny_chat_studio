@@ -12,7 +12,8 @@ import {
 
 interface UseChatOptions {
   initialMessages?: ChatMessage[];
-  conversationId?: string | undefined;
+  conversationId?: string | undefined; // 为了向后兼容保留
+  chatId?: string | undefined; // 新的参数名称
 }
 
 // 消息状态类型
@@ -24,7 +25,10 @@ type MessageStatus = "complete" | "streaming";
 export function useChat({
   initialMessages = [],
   conversationId = undefined,
+  chatId = undefined,
 }: UseChatOptions = {}) {
+  // 优先使用 chatId，如果没有则使用 conversationId
+  const effectiveId = chatId || conversationId;
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,13 +40,13 @@ export function useChat({
   >({});
 
   useEffect(() => {
-    if (conversationId) {
-      loadMessages(conversationId);
+    if (effectiveId) {
+      loadMessages(effectiveId);
     } else {
       // 如果没有对话ID，清空消息列表
       setMessages([]);
     }
-  }, [conversationId]);
+  }, [effectiveId]);
 
   // 加载特定对话的消息
   const loadMessages = async (convId: string) => {
@@ -88,8 +92,8 @@ export function useChat({
 
     try {
       // 如果有对话ID，保存消息到数据库
-      if (conversationId) {
-        const savedMsg = await saveMessageToConversation(conversationId, {
+      if (effectiveId) {
+        const savedMsg = await saveMessageToConversation(effectiveId, {
           content: userMessage.content,
           role: userMessage.role,
         });
@@ -136,7 +140,7 @@ export function useChat({
             )
           );
         },
-        conversationId || undefined
+        effectiveId || undefined
       );
 
       // 流式响应完成，更新消息状态
@@ -144,8 +148,8 @@ export function useChat({
       setMessageStatus((prev) => ({ ...prev, [aiMessageId]: "complete" }));
 
       // 如果有对话ID，保存完整的AI响应到数据库
-      if (conversationId) {
-        const savedMsg = await saveMessageToConversation(conversationId, {
+      if (effectiveId) {
+        const savedMsg = await saveMessageToConversation(effectiveId, {
           content: fullResponse,
           role: "assistant" as MessageRole,
         });

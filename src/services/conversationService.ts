@@ -15,7 +15,7 @@ export async function getUserConversations(
 ): Promise<ConversationWithMessages[]> {
   try {
     // 从API获取对话列表
-    const response = await fetch(`/api/conversations?userId=${userId}`, {
+    const response = await fetch(`/api/chats?userId=${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export async function getConversationMessages(
   try {
     // 从API获取消息列表
     const response = await fetch(
-      `/api/conversations/${conversationId}/messages`,
+      `/api/chat/${conversationId}/messages`,
       {
         method: "GET",
         headers: {
@@ -78,7 +78,7 @@ export async function createConversation(
 ): Promise<Conversation> {
   try {
     // 向API发送创建对话请求
-    const response = await fetch("/api/conversations", {
+    const response = await fetch("/api/chats", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -111,7 +111,7 @@ export async function saveMessageToConversation(
   try {
     // 向API发送保存消息请求
     const response = await fetch(
-      `/api/conversations/${conversationId}/messages`,
+      `/api/chat/${conversationId}/messages`,
       {
         method: "POST",
         headers: {
@@ -146,8 +146,8 @@ export async function deleteConversation(
   try {
     // 向API发送删除对话请求
     const url = permanent
-      ? `/api/conversations/${conversationId}?permanent=true`
-      : `/api/conversations/${conversationId}`;
+      ? `/api/chat/${conversationId}?permanent=true`
+      : `/api/chat/${conversationId}`;
 
     const response = await fetch(url, {
       method: "DELETE",
@@ -177,7 +177,7 @@ export async function restoreConversation(
 ): Promise<{ success: boolean }> {
   try {
     // 向API发送恢复对话请求
-    const response = await fetch(`/api/conversations/${conversationId}`, {
+    const response = await fetch(`/api/chat/${conversationId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

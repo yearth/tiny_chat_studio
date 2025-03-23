@@ -32,19 +32,24 @@ export async function sendChatMessage(
   modelId: string,
   conversationId?: string
 ): Promise<ChatResponse> {
-  const response = await fetch("/api/chat", {
+  // 根据是否有对话 ID 选择不同的 API 路径
+  const apiPath = conversationId 
+    ? `/api/chat/${conversationId}/messages` 
+    : "/api/chat";
+    
+  const response = await fetch(apiPath, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
-      modelId,
+      message: {
+        role: messages[messages.length - 1].role,
+        content: messages[messages.length - 1].content,
+        modelId
+      },
       ...(conversationId && { conversationId }),
-    } as ChatRequest),
+    }),
   });
 
   if (!response.ok) {
@@ -75,19 +80,24 @@ export async function sendChatMessageStream(
   logToConsole("sendChatMessageStream modelId", modelId);
   logToConsole("sendChatMessageStream conversationId", conversationId);
   try {
-    const response = await fetch("/api/chat", {
+    // 根据是否有对话 ID 选择不同的 API 路径
+    const apiPath = conversationId 
+      ? `/api/chat/${conversationId}/messages` 
+      : "/api/chat";
+      
+    const response = await fetch(apiPath, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messages: messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        modelId,
+        message: {
+          role: messages[messages.length - 1].role,
+          content: messages[messages.length - 1].content,
+          modelId
+        },
         ...(conversationId && { conversationId }),
-      } as ChatRequest),
+      }),
     });
 
     logToConsole("sendChatMessageStream response", response);
