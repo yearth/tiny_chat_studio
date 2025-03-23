@@ -4,7 +4,11 @@ import {
   getConversationMessages,
   saveMessageToConversation,
 } from "@/services/conversationService";
-import { ChatMessage, MessageRole, convertToFrontendMessage } from "@/types/prisma";
+import {
+  ChatMessage,
+  MessageRole,
+  convertToFrontendMessage,
+} from "@/types/prisma";
 
 interface UseChatOptions {
   initialMessages?: ChatMessage[];
@@ -12,7 +16,7 @@ interface UseChatOptions {
 }
 
 // 消息状态类型
-type MessageStatus = 'complete' | 'streaming';
+type MessageStatus = "complete" | "streaming";
 
 /**
  * 自定义钩子，用于管理聊天消息和发送消息
@@ -24,10 +28,13 @@ export function useChat({
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
-  const [messageStatus, setMessageStatus] = useState<Record<string, MessageStatus>>({});
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null
+  );
+  const [messageStatus, setMessageStatus] = useState<
+    Record<string, MessageStatus>
+  >({});
 
-  // 当对话ID变化时，加载该对话的消息
   useEffect(() => {
     if (conversationId) {
       loadMessages(conversationId);
@@ -84,15 +91,17 @@ export function useChat({
       if (conversationId) {
         const savedMsg = await saveMessageToConversation(conversationId, {
           content: userMessage.content,
-          role: userMessage.role
+          role: userMessage.role,
         });
-        
+
         // 将保存的消息转换为前端消息格式
         const savedUserMessage = convertToFrontendMessage(savedMsg);
-        
+
         // 替换临时消息为保存的消息
-        setMessages(prev => 
-          prev.map(msg => msg.id === userMessage.id ? savedUserMessage : msg)
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === userMessage.id ? savedUserMessage : msg
+          )
         );
       }
 
@@ -107,10 +116,10 @@ export function useChat({
 
       // 添加初始的AI响应到消息列表
       setMessages((prev) => [...prev, aiMessage]);
-      
+
       // 设置消息状态为流式中
       setStreamingMessageId(aiMessageId);
-      setMessageStatus(prev => ({ ...prev, [aiMessageId]: 'streaming' }));
+      setMessageStatus((prev) => ({ ...prev, [aiMessageId]: "streaming" }));
 
       // 使用流式 API 发送消息
       let fullResponse = "";
@@ -119,10 +128,10 @@ export function useChat({
         modelId,
         (chunk) => {
           // 每收到一个文本块，就更新消息内容
-          setMessages((prev) => 
-            prev.map(msg => 
-              msg.id === aiMessageId 
-                ? { ...msg, content: msg.content + chunk } 
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: msg.content + chunk }
                 : msg
             )
           );
@@ -132,21 +141,21 @@ export function useChat({
 
       // 流式响应完成，更新消息状态
       setStreamingMessageId(null);
-      setMessageStatus(prev => ({ ...prev, [aiMessageId]: 'complete' }));
+      setMessageStatus((prev) => ({ ...prev, [aiMessageId]: "complete" }));
 
       // 如果有对话ID，保存完整的AI响应到数据库
       if (conversationId) {
         const savedMsg = await saveMessageToConversation(conversationId, {
           content: fullResponse,
-          role: "assistant" as MessageRole
+          role: "assistant" as MessageRole,
         });
-        
+
         // 将保存的消息转换为前端消息格式
         const savedAiMessage = convertToFrontendMessage(savedMsg);
-        
+
         // 替换临时消息为保存的消息
-        setMessages(prev => 
-          prev.map(msg => msg.id === aiMessageId ? savedAiMessage : msg)
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === aiMessageId ? savedAiMessage : msg))
         );
       }
     } catch (err) {
@@ -163,7 +172,7 @@ export function useChat({
 
       // 添加错误消息到列表
       setMessages((prev) => [...prev, errorMessage]);
-      
+
       // 清除流式状态
       setStreamingMessageId(null);
     } finally {
