@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mail, Github } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Mail, Github, User, Lock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface LoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reason?: "usage_limit" | "user_action";
 }
+
+type LoginMethod = "oauth" | "credentials";
 
 export function LoginDialog({ open, onOpenChange, reason }: LoginDialogProps) {
   return (
