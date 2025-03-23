@@ -1,3 +1,7 @@
+// 配置 DNS 解析顺序，优先使用 IPv4，解决超时问题
+import { setDefaultResultOrder } from 'dns';
+setDefaultResultOrder('ipv4first');
+
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -34,14 +38,14 @@ export const authOptions: NextAuthOptions = {
         },
       },
       httpOptions: {
-        timeout: 3500,
+        timeout: 10000, // 增加超时时间到10秒
       },
     }),
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID || "",
       clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
       httpOptions: {
-        timeout: 3500,
+        timeout: 10000, // 增加超时时间到10秒
       },
     }),
   ],
@@ -55,6 +59,6 @@ export const authOptions: NextAuthOptions = {
   },
   // 使用默认的回调URL，不再需要自定义登录页面
   // 因为我们使用模态对话框进行登录
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development", // 在开发环境中启用调试模式
 };
