@@ -1,6 +1,6 @@
 // 配置 DNS 解析顺序，优先使用 IPv4，解决超时问题
-import { setDefaultResultOrder } from 'dns';
-setDefaultResultOrder('ipv4first');
+import { setDefaultResultOrder } from "dns";
+setDefaultResultOrder("ipv4first");
 
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
@@ -21,22 +21,20 @@ type SessionCallbackParams = {
   token: JWT;
 };
 
-// 注意：这里我们不再在代码中配置代理
-// 而是依赖环境变量 HTTP_PROXY 和 HTTPS_PROXY
-// 这些变量应该在启动应用前设置，例如：
-// HTTP_PROXY=http://127.0.0.1:7897 HTTPS_PROXY=http://127.0.0.1:7897 npm run dev
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+
       authorization: {
         params: {
           prompt: "select_account",
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
         },
       },
+
       httpOptions: {
         timeout: 10000, // 增加超时时间到10秒
       },
@@ -57,8 +55,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // 使用默认的回调URL，不再需要自定义登录页面
-  // 因为我们使用模态对话框进行登录
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development", // 在开发环境中启用调试模式
 };
