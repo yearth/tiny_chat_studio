@@ -84,11 +84,10 @@ export async function createConversation(
     const conversation = await prisma.conversation.create({
       data: {
         userId,
-        modelId: selectedModelId,
         title,
       },
     });
-    
+
     logToConsole("Created new conversation:", conversation.id);
     return conversation;
   } catch (error) {
@@ -132,7 +131,9 @@ export async function saveMessage(
 export function isApiKeyConfigured(modelId: string): boolean {
   if (modelId === "deepseek-r1") {
     const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-    return !(!deepseekApiKey || deepseekApiKey === "your-deepseek-api-key-here");
+    return !(
+      !deepseekApiKey || deepseekApiKey === "your-deepseek-api-key-here"
+    );
   } else if (modelId === "gpt-3.5-turbo" || modelId === "gpt-4") {
     const openaiApiKey = process.env.OPENAI_API_KEY;
     return !(!openaiApiKey || openaiApiKey === "your-api-key-here");
