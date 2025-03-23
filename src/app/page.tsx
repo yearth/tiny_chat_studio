@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { MobileLayout } from "@/components/layouts/mobile-layout";
 import { TabletLayout } from "@/components/layouts/tablet-layout";
 import { DesktopLayout } from "@/components/layouts/desktop-layout";
@@ -19,8 +20,12 @@ export default function Home() {
   // 使用自定义钩子管理屏幕尺寸
   const screenSize = useScreenSize();
 
+  // 获取用户会话信息
+  const { data: session } = useSession();
+  console.log("🔍 ~ Home ~ src/app/page.tsx:24 ~ session:", session);
+
   // 使用自定义钩子管理对话列表
-  // 注意：在实际应用中，userId应该从认证系统获取
+  // 根据环境选择用户ID：生产环境使用登录用户ID，开发环境使用硬编码ID
   const {
     conversations,
     selectedConversationId,
@@ -30,7 +35,10 @@ export default function Home() {
     removeConversation,
     restoreDeletedConversation,
   } = useConversations({
-    userId: "cm8ke3nrj0000jsxy4tsfv7gy", // 使用 seed 脚本创建的测试用户ID
+    userId:
+      process.env.NODE_ENV === "production" && session?.user?.id
+        ? session.user.id
+        : "cm8ke3nrj0000jsxy4tsfv7gy", // 开发环境使用测试用户ID
   });
 
   // 使用自定义钩子管理当前对话的消息
