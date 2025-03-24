@@ -133,6 +133,10 @@ export function useConversations({
   // 初始加载对话列表
   useEffect(() => {
     if (userId) {
+      console.log(
+        "🔍 ~ useConversations ~ src/hooks/useConversations.ts:135 ~ userId:",
+        userId
+      );
       loadConversations();
     }
   }, [userId]);

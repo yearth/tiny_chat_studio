@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Settings, MessageSquare } from "lucide-react";
+import { Settings, Twitch } from "lucide-react";
 import { ChatHistoryDialog } from "@/components/chat/chat-history-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export function Navbar() {
       <div className="w-full flex h-16 items-center px-4 md:px-6">
         {/* 左侧 Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <MessageSquare className="h-6 w-6 text-primary" />
+          <Twitch className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold text-foreground">TinyChat</span>
         </Link>
 
