@@ -79,6 +79,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* 渐变文本颜色变量 */
+  --gradient-text-1: #4285f4; /* 蓝色 */
+  --gradient-text-2: #ea4335; /* 红色 */
+  --gradient-text-3: #fbbc05; /* 黄色 */
 }
 
 .dark {
@@ -122,6 +127,32 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* 渐变文本样式 */
+.gradient-text {
+  color: transparent;
+  background: linear-gradient(
+    74deg,
+    var(--gradient-text-1) 0%,
+    var(--gradient-text-2) 35%,
+    var(--gradient-text-3) 70%,
+    var(--gradient-text-2) 100%
+  );
+  background-size: 400% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
 
