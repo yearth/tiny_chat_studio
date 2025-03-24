@@ -7,6 +7,7 @@ import { Settings, Twitch } from "lucide-react";
 import { ChatHistoryDialog } from "@/components/chat/chat-history-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Navbar() {
   const router = useRouter();
@@ -24,6 +25,9 @@ export function Navbar() {
         {/* 右侧功能按钮和头像 */}
         <div className="flex items-center space-x-4 ml-auto">
           <ChatHistoryDialog />
+          {/* 主题切换 */}
+          <ThemeToggle />
+          {/* 设置按钮 */}
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
           </Button>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Send, Paperclip, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { availableModels } from "@/data/models";
 import { useUsageLimit } from "@/hooks/useUsageLimit";
 import { LoginDialog } from "@/components/auth/login-dialog";
@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/popover";
 
 interface EnhancedChatInputProps {
-  onSendMessage: (message: string, modelId: string, files?: File[]) => Promise<void>;
+  onSendMessage: (
+    message: string,
+    modelId: string,
+    files?: File[]
+  ) => Promise<void>;
   disabled?: boolean;
   onModelChange?: (modelId: string) => void;
   initialModelId?: string;
@@ -47,7 +51,11 @@ export function EnhancedChatInput({
         return;
       }
 
-      await onSendMessage(input, selectedModel, files.length > 0 ? files : undefined);
+      await onSendMessage(
+        input,
+        selectedModel,
+        files.length > 0 ? files : undefined
+      );
       setInput("");
       setFiles([]);
     }
@@ -60,7 +68,9 @@ export function EnhancedChatInput({
   };
 
   // 获取当前选中的模型信息
-  const currentModel = availableModels.find(model => model.id === selectedModel) || availableModels[0];
+  const currentModel =
+    availableModels.find((model) => model.id === selectedModel) ||
+    availableModels[0];
 
   return (
     <div className={`flex justify-center ${className}`}>
@@ -71,13 +81,18 @@ export function EnhancedChatInput({
             <div className="px-4 pt-3 pb-1 border-b border-input">
               <div className="flex flex-wrap gap-2">
                 {files.map((file, index) => (
-                  <div key={index} className="flex items-center bg-muted rounded-md px-2 py-1 text-xs">
+                  <div
+                    key={index}
+                    className="flex items-center bg-muted rounded-md px-2 py-1 text-xs"
+                  >
                     <span className="truncate max-w-[150px]">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-4 w-4 ml-1"
-                      onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                      onClick={() =>
+                        setFiles(files.filter((_, i) => i !== index))
+                      }
                     >
                       ×
                     </Button>
@@ -87,77 +102,83 @@ export function EnhancedChatInput({
             </div>
           )}
 
-          {/* 输入区域 */}
-          <div className="flex items-center px-2">
-            {/* 文件上传按钮 */}
-            <label className="cursor-pointer p-2 text-muted-foreground hover:text-foreground">
-              <Paperclip className="h-5 w-5" />
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={disabled}
-              />
-            </label>
-
-            {/* 文本输入框 */}
-            <Input
-              type="text"
+          <div className="px-3 pt-2">
+            <Textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setInput(e.target.value)
+              }
+              onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSend();
                 }
               }}
-              placeholder="发送消息给 AI..."
-              className="border-none bg-transparent py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Hi, 想聊点什么？"
+              className="min-h-24 border-none bg-white dark:bg-[#0A0A0A] text-black dark:text-white resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
               disabled={disabled}
             />
+          </div>
 
-            {/* 模型选择器 */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 gap-1 text-xs text-muted-foreground"
+          {/* 底部控制栏 */}
+          <div className="flex items-center justify-between px-3 py-2 border-t border-border">
+            <div className="flex items-center gap-2">
+              {/* 文件上传按钮 */}
+              <label className="cursor-pointer p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent">
+                <Paperclip className="h-5 w-5" />
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
                   disabled={disabled}
-                >
-                  {currentModel.name}
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-0" align="end">
-                <div className="p-1">
-                  {availableModels.map((model) => (
-                    <Button
-                      key={model.id}
-                      variant={model.id === selectedModel ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs"
-                      onClick={() => {
-                        setSelectedModel(model.id);
-                        if (onModelChange) {
-                          onModelChange(model.id);
+                />
+              </label>
+
+              {/* 模型选择器 */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 gap-1 text-xs text-muted-foreground rounded-md hover:bg-accent"
+                    disabled={disabled}
+                  >
+                    {currentModel.name}
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-0" align="start">
+                  <div className="p-1">
+                    {availableModels.map((model) => (
+                      <Button
+                        key={model.id}
+                        variant={
+                          model.id === selectedModel ? "secondary" : "ghost"
                         }
-                      }}
-                    >
-                      {model.name}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => {
+                          setSelectedModel(model.id);
+                          if (onModelChange) {
+                            onModelChange(model.id);
+                          }
+                        }}
+                      >
+                        {model.name}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
 
             {/* 发送按钮 */}
             <Button
               type="button"
               size="icon"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground mr-1"
+              className="text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
               onClick={handleSend}
               disabled={disabled || !input.trim()}
             >

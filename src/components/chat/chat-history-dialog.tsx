@@ -21,6 +21,7 @@ import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { cn } from "@/lib/utils";
 import { useConversations } from "@/hooks/useConversations";
 import { useChat } from "@/hooks/useChat";
+import { MessagePreview } from "./message-preview";
 
 export function ChatHistoryDialog() {
   const router = useRouter();
@@ -225,33 +226,13 @@ export function ChatHistoryDialog() {
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      {messages.slice(0, 3).map((message, index) => (
-                        <div key={index} className="space-y-1">
-                          <div className="text-sm font-medium">
-                            {message.role === "user" ? "您" : "AI"}
-                          </div>
-                          <div className="p-3 rounded-lg bg-accent/50">
-                            <p className="text-sm whitespace-pre-wrap">
-                              {message.content.substring(0, 300)}
-                              {message.content.length > 300 && "..."}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {messages.length > 3 && (
-                        <Button
-                          variant="outline"
-                          className="w-full mt-4"
-                          onClick={() => {
-                            router.push(`/chat/${selectedChatId}`);
-                            setIsOpen(false);
-                          }}
-                        >
-                          查看完整对话 ({messages.length} 条消息)
-                        </Button>
-                      )}
-                    </div>
+                    <MessagePreview
+                      messages={messages}
+                      onViewFullConversation={() => {
+                        router.push(`/chat/${selectedChatId}`);
+                        setIsOpen(false);
+                      }}
+                    />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">

@@ -19,7 +19,7 @@ export function WelcomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col flex-1">
       <div className="flex flex-col items-center justify-center flex-1 p-4">
         <div className="w-full max-w-4xl space-y-8">
           <div className="text-center space-y-2">
