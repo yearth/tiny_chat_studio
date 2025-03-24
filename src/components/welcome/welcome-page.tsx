@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
+import { Navbar } from "@/components/layout/navbar";
 
 interface WelcomePageProps {
   features: string[];
@@ -29,7 +30,9 @@ export function WelcomePage({ features }: WelcomePageProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
+      <Navbar />
+      <div className="flex flex-col items-center justify-center flex-1 p-4">
       <div className="w-full max-w-4xl space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight gradient-text">
@@ -45,6 +48,7 @@ export function WelcomePage({ features }: WelcomePageProps) {
         <div className="mt-8">
           <EnhancedChatInput onSendMessage={handleSendMessage} />
         </div>
+      </div>
       </div>
     </div>
   );
