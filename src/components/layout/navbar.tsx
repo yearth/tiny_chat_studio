@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Settings, MessageSquare, Text } from "lucide-react";
+import { Settings, MessageSquare } from "lucide-react";
+import { ChatHistoryDialog } from "@/components/chat/chat-history-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -22,9 +23,7 @@ export function Navbar() {
 
         {/* 右侧功能按钮和头像 */}
         <div className="flex items-center space-x-4 ml-auto">
-          <Button variant="ghost" size="icon" className="relative">
-            <Text className="h-4 w-4" />
-          </Button>
+          <ChatHistoryDialog />
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
           </Button>
