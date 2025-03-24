@@ -122,39 +122,15 @@ export default function ChatPage({ params }: { params: any }) {
       selectedConversationId={selectedConversationId}
     >
       {screenSize === ScreenSize.MOBILE ? (
-        <MobileLayout
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          conversations={conversations}
-          onSelectConversation={(id) => router.push(`/chat/${id}`)}
-          onNewConversation={handleNewConversation}
-          selectedConversationId={chatId}
-          isLoading={isLoadingConversations}
-        >
+        <MobileLayout>
           {renderChatContent()}
         </MobileLayout>
       ) : screenSize === ScreenSize.TABLET ? (
-        <TabletLayout
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          conversations={conversations}
-          onSelectConversation={(id) => router.push(`/chat/${id}`)}
-          onNewConversation={handleNewConversation}
-          selectedConversationId={chatId}
-          isLoading={isLoadingConversations}
-        >
+        <TabletLayout>
           {renderChatContent()}
         </TabletLayout>
       ) : (
-        <DesktopLayout
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          conversations={conversations}
-          onSelectConversation={(id) => router.push(`/chat/${id}`)}
-          onNewConversation={handleNewConversation}
-          selectedConversationId={chatId}
-          isLoading={isLoadingConversations}
-        >
+        <DesktopLayout>
           {renderChatContent()}
         </DesktopLayout>
       )}

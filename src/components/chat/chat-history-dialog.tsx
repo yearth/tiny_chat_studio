@@ -121,7 +121,7 @@ export function ChatHistoryDialog() {
                     ))}
                 </div>
               ) : filteredChats.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-1 p-2">
                   <div className="px-4 py-2 text-sm font-medium text-muted-foreground sticky top-0 bg-background z-10">
                     最近对话
                   </div>
@@ -129,7 +129,7 @@ export function ChatHistoryDialog() {
                     <button
                       key={chat.id}
                       className={cn(
-                        "w-full px-4 py-3 text-left flex items-center justify-between",
+                        "w-full px-4 py-2 text-left flex items-center justify-between mb-1",
                         selectedChatId === chat.id
                           ? "bg-accent"
                           : "hover:bg-accent/50"

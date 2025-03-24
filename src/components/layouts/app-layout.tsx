@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { SimpleConversation } from "./sidebar-layout";
+import { SimpleConversation } from "@/types/conversation";
 
 interface AppLayoutProps {
   // Sidebar 相关属性
