@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { LocalConversation } from "@/data/mockData";
 import {
   getUserConversations,
   createConversation,
@@ -9,7 +8,8 @@ import {
 
 interface UseConversationsOptions {
   userId: string;
-  initialConversations?: LocalConversation[];
+  // TODO: 类型问题
+  initialConversations?: any[];
 }
 
 /**
@@ -20,7 +20,8 @@ export function useConversations({
   initialConversations = [],
 }: UseConversationsOptions) {
   const [conversations, setConversations] =
-    useState<LocalConversation[]>(initialConversations);
+    // TODO: 类型问题
+    useState<any[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | undefined
   >(undefined);

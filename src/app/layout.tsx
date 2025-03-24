@@ -39,7 +39,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <div className="flex flex-col min-h-screen bg-background">
-              <Navbar />
+              <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm shadow-sm">
+                <Navbar />
+              </div>
               {children}
             </div>
             <Toaster richColors closeButton />

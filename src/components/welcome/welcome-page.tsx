@@ -3,23 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
-import { Navbar } from "@/components/layout/navbar";
 
-interface WelcomePageProps {
-  features: string[];
-}
-
-export function WelcomePage({ features }: WelcomePageProps) {
+export function WelcomePage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  // 处理发送消息的函数
   const handleSendMessage = async (
     message: string,
     modelId: string,
     files?: File[]
   ) => {
-    // 创建新对话并跳转
     router.push(
       "/chat/new?message=" + encodeURIComponent(message) + "&modelId=" + modelId
     );

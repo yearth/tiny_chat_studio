@@ -1,12 +1,11 @@
 import { useRef, useEffect } from "react";
 import { User, Bot } from "lucide-react";
-import { LocalMessage } from "@/data/mockData";
 import { MessageWithThinking } from "./message-with-thinking";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModelDisplay } from "./model-display";
 
 interface MessageListProps {
-  messages: LocalMessage[];
+  messages: any[];
   streamingMessageId?: string | null;
   currentModelId?: string; // 当前选择的模型 ID（用于新消息）
   conversationId?: string; // 当前对话 ID（用于获取对话的模型信息）
@@ -19,7 +18,6 @@ interface MessageListProps {
 export function MessageList({
   messages,
   streamingMessageId,
-  currentModelId,
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
