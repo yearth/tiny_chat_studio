@@ -22,15 +22,16 @@ export function MessagePreview({
   maxContentLength = 300,
 }: MessagePreviewProps) {
   const previewMessages = messages.slice(0, maxPreviewMessages);
-  
+
   return (
     <div className="space-y-4">
-      <MessageList 
+      <MessageList
         messages={previewMessages}
         isPreview={true}
         maxContentLength={maxContentLength}
+        streamingMessageId={null}
       />
-      
+
       {messages.length > maxPreviewMessages && (
         <Button
           variant="outline"
