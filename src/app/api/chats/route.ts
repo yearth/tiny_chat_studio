@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log(
+      "🔍 ~ POST ~ src/app/api/chats/route.ts:43 ~ newChat:",
+      newChat
+    );
+
     return NextResponse.json({ chat: newChat });
   } catch (error) {
     console.error("创建聊天错误:", error);

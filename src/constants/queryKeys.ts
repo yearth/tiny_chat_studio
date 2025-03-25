@@ -6,6 +6,7 @@
 export const QueryKeys = {
   // 聊天相关查询键
   CHATS: "chats",
+  ADD_CHAT: "add-chat",
 
   // 消息相关查询键
   MESSAGES: "messages",

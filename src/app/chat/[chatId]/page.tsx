@@ -10,7 +10,7 @@ export default function ChatPage({ params }: { params: any }) {
   const chatId = resolvedParams.chatId;
 
   return (
-    <div className="flex flex-col h-full bg-background text-foreground">
+    <div className="flex-1 flex flex-col h-full bg-background text-foreground">
       {/* 聊天内容区域 - 使用原生滚动并美化滚动条 */}
       <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
         <div className="max-w-3xl mx-auto pt-4 pb-4">

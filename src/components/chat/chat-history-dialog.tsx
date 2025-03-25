@@ -22,6 +22,7 @@ import { cn, formatDate, formatTime } from "@/lib/utils";
 import { MessagePreview } from "./message-preview";
 import { useChat } from "@/hooks/useChat";
 import { useMessage } from "@/hooks/useMessage";
+import { DEV_USER_ID } from "@/constants/mockId";
 
 export function ChatHistoryDialog() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export function ChatHistoryDialog() {
   const userId =
     process.env.NODE_ENV === "production" && session?.user?.id
       ? session.user.id
-      : "cm8oaij910000jsdwunl63aaw"; // 开发环境使用测试用户ID
+      : DEV_USER_ID; // 开发环境使用测试用户ID
 
   const {
     chats,
