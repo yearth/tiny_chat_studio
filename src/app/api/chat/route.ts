@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/client";
-import { generateResponse, generateStreamResponse } from "./models";
+import { generateStreamResponse } from "./models";
 import { logToConsole } from "./utils/logger";
 
 export async function POST(req: NextRequest) {

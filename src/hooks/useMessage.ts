@@ -36,7 +36,7 @@ interface UseMessageResult {
 }
 
 // 保存单条消息到数据库
-const saveMessage = async (
+export const saveMessage = async (
   chatId: string,
   message: { content: string; role: string; modelId?: string }
 ): Promise<Message> => {
@@ -89,26 +89,29 @@ const sendMessageToAI = async (
   }
 
   // 如果提供了流式处理回调，则处理流式响应
-  if (onStreamChunk && response.headers.get("Content-Type")?.includes("text/event-stream")) {
+  if (
+    onStreamChunk &&
+    response.headers.get("Content-Type")?.includes("text/event-stream")
+  ) {
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
-    
+
     if (reader) {
       let buffer = "";
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
-        
+
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
             if (data === "[DONE]") return response;
-            
+
             try {
               const parsed = JSON.parse(data);
               if (parsed.chunk) {
@@ -155,7 +158,9 @@ export function useMessage(chatId?: string): UseMessageResult {
 
   // 流式消息状态
   const [streamingContent, setStreamingContent] = useState<string>("");
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null
+  );
 
   // 发送消息的 mutation
   const { mutateAsync, isPending: isSending } = useMutation({
@@ -185,13 +190,13 @@ export function useMessage(chatId?: string): UseMessageResult {
       // 3. 发送消息给 AI 并获取响应
       // 注意：这里我们需要包含新添加的用户消息
       const updatedMessages = [...messages, userMessage];
-      
+
       // 处理流式响应的回调
       const handleStreamChunk = (chunk: string) => {
         setStreamingContent((prev: string) => prev + chunk);
       };
-      
-      const aiResponse = await sendMessageToAI(
+
+      await sendMessageToAI(
         updatedMessages,
         chatId,
         modelId,
