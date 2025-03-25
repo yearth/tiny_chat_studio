@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { messages, conversationId, modelId } = body;
+    const { messages, chatId, modelId } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       logToConsole("Invalid messages format");
@@ -66,29 +66,29 @@ export async function POST(req: NextRequest) {
     const userId = user.id; // 使用实际的用户ID
 
     // 从数据库获取对话
-    let conversation;
-    if (conversationId) {
+    let chat;
+    if (chatId) {
       try {
-        conversation = await prisma.conversation.findUnique({
-          where: { id: conversationId },
+        chat = await prisma.chat.findUnique({
+          where: { id: chatId },
           include: { messages: true },
         });
 
-        if (!conversation) {
+        if (!chat) {
           return NextResponse.json(
-            { error: "Conversation not found or access denied" },
+            { error: "chat not found or access denied" },
             { status: 404 }
           );
         }
       } catch (dbError) {
-        logToConsole("Database error finding conversation:", dbError);
+        logToConsole("Database error finding chat:", dbError);
         return NextResponse.json(
-          { error: "Database error finding conversation" },
+          { error: "Database error finding chat" },
           { status: 500 }
         );
       }
     } else {
-      // 如果没有提供conversationId，则创建一个新对话
+      // 如果没有提供chatId，则创建一个新对话
       try {
         // 如果提供了modelId，先检查数据库中是否存在该模型
         if (modelId) {
@@ -106,17 +106,17 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        conversation = await prisma.conversation.create({
+        chat = await prisma.chat.create({
           data: {
             userId,
-            title: messages[0]?.content.substring(0, 30) || "New Conversation",
+            title: messages[0]?.content.substring(0, 30) || "New chat",
           },
         });
-        logToConsole("Created new conversation:", conversation.id);
+        logToConsole("Created new chat:", chat.id);
       } catch (dbError) {
-        logToConsole("Database error creating conversation:", dbError);
+        logToConsole("Database error creating chat:", dbError);
         return NextResponse.json(
-          { error: "Database error creating conversation" },
+          { error: "Database error creating chat" },
           { status: 500 }
         );
       }
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
           data: {
             content: userMessage.content,
             role: userMessage.role,
-            conversationId: conversation.id,
+            chatId: chat.id,
           },
         });
 
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
           data: {
             content: mockResponse,
             role: "assistant",
-            conversationId: conversation.id,
+            chatId: chat.id,
           },
         });
       } catch (dbError) {
@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         message: mockResponse,
-        conversationId: conversation.id,
+        chatId: chat.id,
       });
     }
 
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
         data: {
           content: userMessage.content,
           role: userMessage.role,
-          conversationId: conversation.id,
+          chatId: chat.id,
         },
       });
     } catch (dbError) {
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 使用我们的generateResponse函数生成响应
-    // 使用用户选择的模型ID（modelToUse）而不是对话中存储的模型ID（conversation.modelId）
+    // 使用用户选择的模型ID（modelToUse）而不是对话中存储的模型ID（chat.modelId）
     logToConsole(`Generating response using model: ${modelToUse}`);
 
     // 创建流式响应
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
               encoder.encode(
                 `data: ${JSON.stringify({
                   chunk,
-                  conversationId: conversation.id,
+                  chatId: chat.id,
                 })}\n\n`
               )
             );
@@ -255,7 +255,7 @@ export async function POST(req: NextRequest) {
             data: {
               content: fullResponse,
               role: "assistant",
-              conversationId: conversation.id,
+              chatId: chat.id,
               modelId: modelToUse, // 保存使用的模型ID
             },
           });

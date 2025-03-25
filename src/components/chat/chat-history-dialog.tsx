@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Text, Search, MessageSquare, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -18,10 +17,11 @@ import {
 } from "@/components/ui/dialog";
 import { CustomDialogContent } from "@/components/ui/custom-dialog";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
-import { cn } from "@/lib/utils";
-import { useConversations } from "@/hooks/useConversations";
-import { useChat } from "@/hooks/useChat";
+import { ErrorMessage } from "@/components/ui/error-message";
+import { cn, formatDate, formatTime } from "@/lib/utils";
 import { MessagePreview } from "./message-preview";
+import { useChat } from "@/hooks/useChat";
+import { useMessage } from "@/hooks/useMessage";
 
 export function ChatHistoryDialog() {
   const router = useRouter();
@@ -33,52 +33,51 @@ export function ChatHistoryDialog() {
   const userId =
     process.env.NODE_ENV === "production" && session?.user?.id
       ? session.user.id
-      : "cm8ke3nrj0000jsxy4tsfv7gy"; // 开发环境使用测试用户ID
+      : "cm8oaij910000jsdwunl63aaw"; // 开发环境使用测试用户ID
 
-  // 使用 useConversations 钩子获取对话列表
   const {
-    conversations: chats,
-    isLoading,
-    loadConversations,
-  } = useConversations({ userId, initialConversations: [] });
+    chats,
+    isLoading: chatsLoading,
+    error: chatsError,
+    refetch: refetchChats,
+  } = useChat(userId);
 
-  // 使用 useChat 钩子获取选中对话的消息
-  const { messages, isLoading: isMessagesLoading } = useChat({
-    chatId: selectedChatId || undefined,
-  });
+  const {
+    messages,
+    isLoading: isMessagesLoading,
+    error: messagesError,
+    fetchMessages,
+    refetch: refetchMessages,
+  } = useMessage(selectedChatId || undefined);
 
-  // 加载聊天历史记录
-  useEffect(() => {
-    if (isOpen && userId) {
-      loadConversations();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, userId]);
+  // 过滤聊天记录的函数
+  const filteredChats = useMemo(() => {
+    if (!chats || chats.length === 0) return [];
 
-  // 选择聊天
+    if (!searchQuery) return chats;
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return chats.filter((chat) =>
+      chat.title?.toLowerCase().includes(lowerCaseQuery)
+    );
+  }, [chats, searchQuery]);
+
+  // 选择聊天的函数
   const selectChat = (chatId: string) => {
     setSelectedChatId(chatId);
+    fetchMessages(chatId);
   };
 
-  // 过滤聊天记录
-  const filteredChats = chats.filter((chat) =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 当对话框打开时，聊天记录会自动获取（由于使用了 React Query）
+  // 不再需要手动调用 fetchChats
 
-  // 格式化日期
-  const formatDate = (date: Date | string) => {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
-  };
-
-  // 格式化时间
-  const formatTime = (date: Date | string) => {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return `${dateObj.getHours().toString().padStart(2, "0")}:${dateObj
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  // 当获取到聊天记录后，自动选择第一个聊天
+  useEffect(() => {
+    if (chats && chats.length > 0 && !selectedChatId) {
+      setSelectedChatId(chats[0].id);
+      // fetchMessages 不再需要手动调用，由 React Query 自动处理
+    }
+  }, [chats, selectedChatId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -107,7 +106,17 @@ export function ChatHistoryDialog() {
           {/* 左侧对话列表 */}
           <div className="w-1/3 border-r">
             <ScrollArea className="h-full w-full">
-              {isLoading ? (
+              {chatsError ? (
+                <div className="p-4">
+                  <ErrorMessage
+                    message={`获取聊天列表失败: ${
+                      chatsError.message || "未知错误"
+                    }`}
+                    onRetry={() => refetchChats()}
+                    className="mb-4"
+                  />
+                </div>
+              ) : chatsLoading ? (
                 <div className="space-y-4 p-4">
                   {Array(8)
                     .fill(0)
@@ -162,7 +171,17 @@ export function ChatHistoryDialog() {
           <div className="w-2/3 p-4">
             <ScrollArea className="h-full">
               {selectedChatId ? (
-                isMessagesLoading ? (
+                messagesError ? (
+                  <div className="p-4">
+                    <ErrorMessage
+                      message={`获取消息失败: ${
+                        messagesError.message || "未知错误"
+                      }`}
+                      onRetry={() => refetchMessages()}
+                      className="mb-4"
+                    />
+                  </div>
+                ) : isMessagesLoading ? (
                   <div className="space-y-6 p-4">
                     {Array(5)
                       .fill(0)
@@ -177,13 +196,15 @@ export function ChatHistoryDialog() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold">
-                        {filteredChats.find((c) => c.id === selectedChatId)
-                          ?.title || "对话详情"}
+                        {filteredChats.find(
+                          (chat) => chat.id === selectedChatId
+                        )?.title || "对话详情"}
                       </h3>
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         {selectedChatId &&
-                          filteredChats.find((c) => c.id === selectedChatId)
-                            ?.updatedAt && (
+                          filteredChats.find(
+                            (chat) => chat.id === selectedChatId
+                          )?.updatedAt && (
                             <>
                               <div className="flex items-center">
                                 <Calendar className="h-4 w-4 mr-1" />
@@ -191,7 +212,7 @@ export function ChatHistoryDialog() {
                                   {formatDate(
                                     String(
                                       filteredChats.find(
-                                        (c) => c.id === selectedChatId
+                                        (chat) => chat.id === selectedChatId
                                       )?.updatedAt
                                     )
                                   )}
@@ -203,25 +224,13 @@ export function ChatHistoryDialog() {
                                   {formatTime(
                                     String(
                                       filteredChats.find(
-                                        (c) => c.id === selectedChatId
+                                        (chat) => chat.id === selectedChatId
                                       )?.updatedAt
                                     )
                                   )}
                                 </span>
                               </div>
                             </>
-                          )}
-                        {selectedChatId &&
-                          filteredChats.find(
-                            (c) => c.id === selectedChatId
-                          ) && (
-                            <Badge variant="outline" className="ml-2">
-                              {(
-                                filteredChats.find(
-                                  (c) => c.id === selectedChatId
-                                ) as any
-                              )?.modelId || "默认模型"}
-                            </Badge>
                           )}
                       </div>
                     </div>

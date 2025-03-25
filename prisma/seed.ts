@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 async function main() {
   try {
     console.log("开始数据库种子初始化...");
-    
+
     // 清空数据库中的所有数据
     console.log("清空现有数据...");
     await prisma.message.deleteMany({});
-    await prisma.conversation.deleteMany({});
+    await prisma.chat.deleteMany({});
     await prisma.aIModel.deleteMany({});
     await prisma.user.deleteMany({});
     console.log("数据库已清空");
@@ -51,20 +51,6 @@ async function main() {
         description: "阿里巴巴的通义千问模型",
         iconUrl: "/icons/qwen.svg",
       },
-      {
-        name: "GPT-3.5 Turbo",
-        provider: "openai",
-        modelId: "gpt-3.5-turbo",
-        description: "快速、经济实惠的模型，适合大多数任务",
-        iconUrl: "/icons/openai.svg",
-      },
-      {
-        name: "GPT-4",
-        provider: "openai",
-        modelId: "gpt-4",
-        description: "更强大的模型，适合复杂任务",
-        iconUrl: "/icons/openai.svg",
-      },
     ];
 
     for (const model of defaultModels) {
@@ -85,7 +71,7 @@ async function main() {
     console.log("创建默认AI模型");
 
     // 创建示例对话
-    const sampleConversations = [
+    const sampleChats = [
       { title: "计算机视觉分析器开发" },
       { title: "Gemini Impact 如何写好写作提示词" },
       { title: "对比自然语言处理技术" },
@@ -93,15 +79,15 @@ async function main() {
       { title: "PowerPoint制作工作汇报" },
     ];
 
-    for (const conv of sampleConversations) {
-      const conversation = await prisma.conversation.create({
+    for (const conv of sampleChats) {
+      const chat = await prisma.chat.create({
         data: {
           title: conv.title,
           userId: testUser.id,
         },
       });
 
-      console.log(`创建对话: ${conversation.id}`);
+      console.log(`创建对话: ${chat.id}`);
 
       // 为每个对话创建示例消息
       const sampleMessages = [
@@ -124,7 +110,7 @@ async function main() {
         const messageData: any = {
           content: msg.content,
           role: msg.role,
-          conversationId: conversation.id,
+          chatId: chat.id,
         };
 
         // 只为 AI 消息添加模型关联
@@ -142,9 +128,7 @@ async function main() {
         });
       }
 
-      console.log(
-        `为对话 ${conversation.id} 创建了 ${sampleMessages.length} 条消息`
-      );
+      console.log(`为对话 ${chat.id} 创建了 ${sampleMessages.length} 条消息`);
     }
 
     console.log("数据库种子初始化完成!");

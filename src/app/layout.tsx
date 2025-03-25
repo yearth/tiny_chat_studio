@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/providers/session-provider";
+import { QueryProvider } from "@/providers/query-provider";
 import { Navbar } from "@/components/layout/navbar";
 
 const geistSans = Geist({
@@ -32,20 +33,24 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
         <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="min-h-screen h-screen flex flex-col">
-              <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
-                <Navbar />
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <div className="min-h-screen h-screen flex flex-col">
+                <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
+                  <Navbar />
+                </div>
+                <div className="flex flex-1 h-[calc(100vh-64px)]">
+                  {children}
+                </div>
               </div>
-              <div className="flex-1 h-[calc(100vh-64px)]">{children}</div>
-            </div>
-            <Toaster richColors closeButton />
-          </ThemeProvider>
+              <Toaster richColors closeButton />
+            </ThemeProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>

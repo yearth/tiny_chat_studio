@@ -14,7 +14,7 @@ export async function GET(
     const { chatId } = await params;
 
     // 获取聊天详情
-    const conversation = await prisma.conversation.findUnique({
+    const chat = await prisma.chat.findUnique({
       where: {
         id: chatId,
       },
@@ -27,11 +27,11 @@ export async function GET(
       },
     });
 
-    if (!conversation) {
+    if (!chat) {
       return NextResponse.json({ error: "聊天不存在" }, { status: 404 });
     }
 
-    return NextResponse.json({ conversation });
+    return NextResponse.json({ chat });
   } catch (error) {
     console.error("获取聊天详情错误:", error);
     return NextResponse.json({ error: "获取聊天详情失败" }, { status: 500 });
@@ -48,25 +48,25 @@ export async function DELETE(
   try {
     const { chatId } = await params;
     const { searchParams } = new URL(request.url);
-    const permanent = searchParams.get('permanent') === 'true';
+    const permanent = searchParams.get("permanent") === "true";
 
     if (permanent) {
       // 永久删除 - 首先删除所有关联的消息
       await prisma.message.deleteMany({
         where: {
-          conversationId: chatId,
+          chatId: chatId,
         },
       });
 
       // 然后删除聊天
-      await prisma.conversation.delete({
+      await prisma.chat.delete({
         where: {
           id: chatId,
         },
       });
     } else {
       // 伪删除 - 仅设置 deletedAt 字段
-      await prisma.conversation.update({
+      await prisma.chat.update({
         where: {
           id: chatId,
         },
@@ -95,9 +95,9 @@ export async function PATCH(
     const body = await request.json();
     const { action } = body;
 
-    if (action === 'restore') {
+    if (action === "restore") {
       // 恢复已删除的聊天
-      await prisma.conversation.update({
+      await prisma.chat.update({
         where: {
           id: chatId,
         },

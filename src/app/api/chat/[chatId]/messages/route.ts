@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, context: { params: tParams }) {
     }
 
     const messages = await prisma.message.findMany({
-      where: { conversationId: chatId },
+      where: { chatId },
       orderBy: { createdAt: "asc" },
       include: {
         model: true, // 包含关联的模型信息
@@ -38,14 +38,14 @@ export async function POST(request: NextRequest, context: { params: tParams }) {
 
     const savedMessage = await prisma.message.create({
       data: {
-        conversationId: chatId,
+        chatId,
         content: message.content,
         role: message.role,
         modelId: message.modelId, // 添加模型ID支持
       },
     });
 
-    await prisma.conversation.update({
+    await prisma.chat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },
     });

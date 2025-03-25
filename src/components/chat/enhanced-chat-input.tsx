@@ -56,6 +56,7 @@ export function EnhancedChatInput({
         selectedModel,
         files.length > 0 ? files : undefined
       );
+
       setInput("");
       setFiles([]);
     }
