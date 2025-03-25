@@ -3,10 +3,12 @@
 import { useEffect, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { MessageList } from "@/components/chat/message-list";
+
 import { useChat } from "@/hooks/useChat";
 import { useConversations } from "@/hooks/useConversations";
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
+import { MessageList } from "@/components/chat/message-list";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ChatPage({ params }: { params: any }) {
   const resolvedParams =
@@ -44,22 +46,29 @@ export default function ChatPage({ params }: { params: any }) {
     chatId, // 使用新的 chatId 参数
   });
 
+  // 获取当前选中的对话信息
+  const selectedConversation = conversations.find((conv) => conv.id === chatId);
+  const currentModelId =
+    selectedConversation?.modelId || "deepseek/deepseek-chat:free";
+
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      {/* 聊天内容区域 */}
-      <div className="flex-1 overflow-y-auto pb-24">
-        <MessageList
-          key="message-list"
-          messages={messages}
-          streamingMessageId={streamingMessageId}
-          currentModelId={"deepseek/deepseek-chat:free"}
-          conversationId={chatId}
-        />
+    <div className="flex flex-col h-full bg-background text-foreground">
+      {/* 聊天内容区域 - 使用原生滚动并美化滚动条 */}
+      <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
+        <div className="max-w-3xl mx-auto pt-4 pb-4">
+          <MessageList
+            messages={messages}
+            streamingMessageId={streamingMessageId}
+            currentModelId={currentModelId}
+            conversationId={chatId || undefined}
+            className=""
+          />
+        </div>
       </div>
 
-      {/* 输入区域  */}
-      <div className="sticky w-full bg-background/80 backdrop-blur-sm py-4">
-        <div className="container max-w-4xl mx-auto px-4">
+      {/* 输入区域 - 使用sticky定位固定在底部 */}
+      <div className="sticky bottom-0 left-0 right-0 w-full bg-background/80 backdrop-blur-sm py-4">
+        <div className="max-w-3xl mx-auto px-8">
           <EnhancedChatInput onSendMessage={() => Promise.resolve()} />
         </div>
       </div>

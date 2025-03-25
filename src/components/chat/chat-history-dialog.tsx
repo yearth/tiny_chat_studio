@@ -106,7 +106,7 @@ export function ChatHistoryDialog() {
         <div className="flex-1 flex overflow-hidden">
           {/* 左侧对话列表 */}
           <div className="w-1/3 border-r">
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full w-full">
               {isLoading ? (
                 <div className="space-y-4 p-4">
                   {Array(8)
