@@ -44,7 +44,7 @@ export default function RootLayout({
                 <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
                   <Navbar />
                 </div>
-                <div className="flex flex-1 h-[calc(100vh-64px)]">
+                <div className="w-full flex flex-1 h-[calc(100vh-64px)]">
                   {children}
                 </div>
               </div>

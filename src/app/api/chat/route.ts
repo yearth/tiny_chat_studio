@@ -209,20 +209,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 保存用户消息到数据库
-    const userMessage = messages[messages.length - 1];
-    try {
-      await prisma.message.create({
-        data: {
-          content: userMessage.content,
-          role: userMessage.role,
-          chatId: chat.id,
-        },
-      });
-    } catch (dbError) {
-      logToConsole("Database error saving user message:", dbError);
-    }
-
     // 使用我们的generateResponse函数生成响应
     // 使用用户选择的模型ID（modelToUse）而不是对话中存储的模型ID（chat.modelId）
     logToConsole(`Generating response using model: ${modelToUse}`);

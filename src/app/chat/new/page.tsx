@@ -47,9 +47,8 @@ export default function NewChatPage() {
     // 只依赖 router，不依赖 addConversation
   }, [router]);
 
-  // 显示加载中状态
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="w-full flex items-center justify-center min-h-screen bg-background">
       <div className="text-center">
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
         <p className="mt-4 text-muted-foreground">正在创建新对话...</p>

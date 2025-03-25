@@ -36,12 +36,19 @@ export async function POST(request: NextRequest, context: { params: tParams }) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
+    console.log("保存消息:", {
+      chatId,
+      content: message.content,
+      role: message.role,
+      modelId: message.modelId,
+    });
+
     const savedMessage = await prisma.message.create({
       data: {
         chatId,
         content: message.content,
         role: message.role,
-        modelId: message.modelId, // 添加模型ID支持
+        modelId: message.modelId,
       },
     });
 
