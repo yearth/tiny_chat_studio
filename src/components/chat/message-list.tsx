@@ -16,7 +16,7 @@ interface MessageListProps {
   messages: Message[];
   isPreview?: boolean;
   maxContentLength?: number;
-  streamingMessageId?: string;
+  streamingMessageId: string | null;
   currentModelId?: string;
   conversationId?: string;
   className?: string;

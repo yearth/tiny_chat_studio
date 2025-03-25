@@ -1,15 +1,6 @@
 import { logToConsole } from "@/app/api/chat/utils/logger";
 import { Message } from "@/types/chat";
 
-interface ChatRequest {
-  messages: {
-    role: string;
-    content: string;
-  }[];
-  modelId: string;
-  conversationId?: string;
-}
-
 interface ChatResponse {
   message: string;
   conversationId?: string;
@@ -33,10 +24,10 @@ export async function sendChatMessage(
   conversationId?: string
 ): Promise<ChatResponse> {
   // 根据是否有对话 ID 选择不同的 API 路径
-  const apiPath = conversationId 
-    ? `/api/chat/${conversationId}/messages` 
+  const apiPath = conversationId
+    ? `/api/chat/${conversationId}/messages`
     : "/api/chat";
-    
+
   const response = await fetch(apiPath, {
     method: "POST",
     headers: {
@@ -46,7 +37,7 @@ export async function sendChatMessage(
       message: {
         role: messages[messages.length - 1].role,
         content: messages[messages.length - 1].content,
-        modelId
+        modelId,
       },
       ...(conversationId && { conversationId }),
     }),
@@ -81,10 +72,10 @@ export async function sendChatMessageStream(
   logToConsole("sendChatMessageStream conversationId", conversationId);
   try {
     // 根据是否有对话 ID 选择不同的 API 路径
-    const apiPath = conversationId 
-      ? `/api/chat/${conversationId}/messages` 
+    const apiPath = conversationId
+      ? `/api/chat/${conversationId}/messages`
       : "/api/chat";
-      
+
     const response = await fetch(apiPath, {
       method: "POST",
       headers: {
@@ -94,7 +85,7 @@ export async function sendChatMessageStream(
         message: {
           role: messages[messages.length - 1].role,
           content: messages[messages.length - 1].content,
-          modelId
+          modelId,
         },
         ...(conversationId && { conversationId }),
       }),
