@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Send, Paperclip, ChevronDown, Loader2, Square } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  ChevronDown,
+  Loader2,
+  StopCircle,
+  Square,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { availableModels } from "@/data/models";
@@ -132,7 +139,13 @@ export function EnhancedChatInput({
           <div className="flex items-center justify-between px-3 py-2 border-t border-border">
             <div className="flex items-center gap-2">
               {/* 文件上传按钮 */}
-              <label className={`p-1 text-muted-foreground rounded-md ${!isDisabled ? 'cursor-pointer hover:text-foreground hover:bg-accent' : 'opacity-50 cursor-not-allowed'}`}>
+              <label
+                className={`p-1 text-muted-foreground rounded-md ${
+                  !isDisabled
+                    ? "cursor-pointer hover:text-foreground hover:bg-accent"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
+              >
                 <Paperclip className="h-5 w-5" />
                 <input
                   type="file"
@@ -188,7 +201,7 @@ export function EnhancedChatInput({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="text-destructive hover:text-destructive/90 rounded-full hover:bg-destructive/10"
+                className="text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
                 onClick={onAbortFetchAIResponse}
               >
                 <Square className="h-5 w-5" />
