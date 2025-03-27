@@ -57,42 +57,10 @@ export function WelcomePage() {
     modelId: string,
     files?: File[]
   ) => {
-    // 暂时注释掉文件相关的逻辑
-    /*
-    let fileIds = [];
-    
-    if (files && files.length > 0) {
-      try {
-        // 先上传文件到服务器临时存储
-        const formData = new FormData();
-        files.forEach(file => formData.append('files', file));
-        
-        const response = await fetch('/api/upload/temp', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          throw new Error(`文件上传失败: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        if (result.success && result.fileIds) {
-          fileIds = result.fileIds.map((file: any) => file.id);
-        }
-      } catch (error) {
-        console.error('文件上传失败:', error);
-        alert('文件上传失败，请重试');
-        return;
-      }
-    }
-    */
-
     try {
       await createChat(message, modelId);
     } catch (err) {
       console.error("创建聊天失败:", err);
-      // 错误已在 createChat 函数中设置，这里不需要再显示 alert
     }
   };
 
