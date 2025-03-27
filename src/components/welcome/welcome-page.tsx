@@ -5,19 +5,52 @@ import { useSession } from "next-auth/react";
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
 import { DEV_USER_ID } from "@/constants/mockId";
 import { useChat } from "@/hooks/useChat";
-import { useMessage, saveMessage } from "@/hooks/useMessage";
+import { useWelcomeStorage } from "@/hooks/useWelcomeStorage";
+import { useState, useCallback } from "react";
 
 export function WelcomePage() {
   const router = useRouter();
   const { data: session } = useSession();
-  
-  // 获取用户 ID
-  const userId = process.env.NODE_ENV === "production" && session?.user?.id
-    ? session.user.id
-    : DEV_USER_ID;
-  
-  // 使用 useChat 钩子获取创建聊天的功能
+
+  const userId =
+    process.env.NODE_ENV === "production" && session?.user?.id
+      ? session.user.id
+      : DEV_USER_ID;
+
   const { addChat, isAddingChat } = useChat(userId);
+  const { setMessage, setModelId, setIsFromWelcome } = useWelcomeStorage();
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // 创建聊天的函数
+  const createChat = useCallback(
+    async (message: string, modelId: string) => {
+      setIsCreating(true);
+      setError(null);
+
+      try {
+        // 将必要信息存入 localStorage，用于在 chat 页面中发起对话
+        setMessage(message);
+        setModelId(modelId);
+        setIsFromWelcome(true);
+
+        const newChat = await addChat("新对话");
+
+        if (!newChat) {
+          throw new Error("创建聊天失败");
+        }
+
+        router.push(`/chat/${newChat.id}`);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("创建聊天失败"));
+        throw err;
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [router, addChat, setMessage, setModelId, setIsFromWelcome]
+  );
 
   const handleSendMessage = async (
     message: string,
@@ -54,30 +87,12 @@ export function WelcomePage() {
       }
     }
     */
-    
+
     try {
-      // 1. 将用户输入的文本存入 sessionStorage
-      // 对消息进行编码，防止特殊字符引起问题
-      sessionStorage.setItem('welcomeMessage', encodeURIComponent(message));
-      
-      // 2. 将模型 ID 存入 sessionStorage
-      sessionStorage.setItem('welcomeModelId', modelId);
-      
-      // 3. 将是否来自 welcome 的 flag 存入 sessionStorage
-      sessionStorage.setItem('fromWelcome', 'true');
-      
-      // 4. 使用 addChat 创建新聊天
-      const newChat = await addChat('新对话');
-      
-      if (!newChat) {
-        throw new Error('创建聊天失败');
-      }
-      
-      // 5. 跳转到新聊天页面，不再使用 URL 参数
-      router.push(`/chat/${newChat.id}`);
-    } catch (error) {
-      console.error('创建聊天失败:', error);
-      alert('创建聊天失败，请重试');
+      await createChat(message, modelId);
+    } catch (err) {
+      console.error("创建聊天失败:", err);
+      // 错误已在 createChat 函数中设置，这里不需要再显示 alert
     }
   };
 
@@ -97,8 +112,16 @@ export function WelcomePage() {
           </div>
 
           <div className="mt-8">
-            <EnhancedChatInput onSendMessage={handleSendMessage} />
+            <EnhancedChatInput
+              onSendMessage={handleSendMessage}
+              disabled={isCreating || isAddingChat}
+            />
           </div>
+          {error && (
+            <div className="text-red-500 text-center mt-2">
+              创建聊天失败，请重试
+            </div>
+          )}
         </div>
       </div>
     </div>

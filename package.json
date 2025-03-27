@@ -13,6 +13,7 @@
     "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.3.3",
     "@auth/prisma-adapter": "^2.8.0",
     "@prisma/client": "^6.5.0",
     "@radix-ui/react-avatar": "^1.1.3",
@@ -25,7 +26,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tanstack/react-query": "^5.69.0",
-    "ai": "^4.1.54",
+    "ai": "^4.2.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "https-proxy-agent": "^7.0.6",
@@ -37,6 +38,7 @@
     "openai": "^4.86.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-use": "^17.6.0",
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",

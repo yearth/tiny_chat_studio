@@ -3,17 +3,25 @@
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { useMessage, saveMessage } from "@/hooks/useMessage";
-import { useState, useEffect } from "react";
+import { useWelcomeStorage } from "@/hooks/useWelcomeStorage";
+import { useState } from "react";
 import { use } from "react";
 import { Message } from "@prisma/client";
+import { useMount, useUpdateEffect } from "react-use";
 
 export default function ChatPage({ params }: { params: any }) {
   const resolvedParams =
     typeof params === "object" && !("then" in params) ? params : use(params);
   const chatId = resolvedParams.chatId;
 
+  const {
+    getIsFromWelcome,
+    getMessage,
+    getModelId,
+    clearAll: clearWelcomeStorage,
+  } = useWelcomeStorage();
+
   // 初始化状态
-  const [hasInitialized, setHasInitialized] = useState(false);
   const [welcomeData, setWelcomeData] = useState<{
     fromWelcome: boolean;
     welcomeMessage: string;
@@ -34,70 +42,45 @@ export default function ChatPage({ params }: { params: any }) {
     streamingContent,
   } = useMessage(chatId);
 
-  // 初始化并从 sessionStorage 获取数据
-  useEffect(() => {
-    // 只在客户端运行这段代码
-    if (typeof window !== "undefined" && !hasInitialized) {
-      // 1. 从 sessionStorage 获取 fromWelcome flag
-      const fromWelcome = sessionStorage.getItem("fromWelcome") === "true";
+  useMount(() => {
+    const fromWelcome = getIsFromWelcome();
+    let welcomeMessage = "";
+    let welcomeModelId = "deepseek/deepseek-chat:free";
 
-      let welcomeMessage = "";
-      let welcomeModelId = "deepseek/deepseek-chat:free";
+    if (fromWelcome) {
+      welcomeMessage = getMessage();
+      const storedModelId = getModelId();
 
-      // 2. 如果 fromWelcome 为 true，才获取其他数据
-      if (fromWelcome) {
-        // 获取并解码用户消息
-        const storedMessage = sessionStorage.getItem("welcomeMessage");
-        if (storedMessage) {
-          welcomeMessage = decodeURIComponent(storedMessage);
-        }
-
-        // 获取模型 ID
-        const storedModelId = sessionStorage.getItem("welcomeModelId");
-        if (storedModelId) {
-          welcomeModelId = storedModelId;
-          // 3. 设置当前模型 ID
-          setCurrentModelId(welcomeModelId);
-        }
-
-        // 存储获取到的数据
-        setWelcomeData({
-          fromWelcome,
-          welcomeMessage,
-          welcomeModelId,
-        });
-
-        // 清除 sessionStorage 中的数据，防止页面刷新后重复发送
-        sessionStorage.removeItem("fromWelcome");
-        sessionStorage.removeItem("welcomeMessage");
-        sessionStorage.removeItem("welcomeModelId");
+      if (storedModelId) {
+        welcomeModelId = storedModelId;
+        setCurrentModelId(welcomeModelId);
       }
 
-      setHasInitialized(true);
-    }
-  }, [hasInitialized]);
+      setWelcomeData({
+        fromWelcome,
+        welcomeMessage,
+        welcomeModelId,
+      });
 
-  // 当初始化完成且有欢迎消息时，发送消息给 AI
-  useEffect(() => {
+      clearWelcomeStorage();
+    }
+  });
+
+  useUpdateEffect(() => {
     const sendWelcomeMessage = async () => {
       // 只有当满足以下条件时才发送消息：
-      // 1. 已经初始化完成
-      // 2. 来自欢迎页面
-      // 3. 有消息内容
-      if (
-        hasInitialized &&
-        welcomeData.fromWelcome &&
-        welcomeData.welcomeMessage
-      ) {
+      // 1. 来自欢迎页面
+      // 2. 有消息内容
+      if (welcomeData.fromWelcome && welcomeData.welcomeMessage) {
         try {
           console.log("正在发送欢迎消息:", welcomeData.welcomeMessage);
 
           // 先保存用户消息到数据库
-          await saveMessage(chatId, {
-            content: welcomeData.welcomeMessage,
-            role: "user",
-            modelId: welcomeData.welcomeModelId,
-          });
+          // await saveMessage(chatId, {
+          //   content: welcomeData.welcomeMessage,
+          //   role: "user",
+          //   modelId: welcomeData.welcomeModelId,
+          // });
 
           // 然后发送消息给 AI
           await sendMessage({
