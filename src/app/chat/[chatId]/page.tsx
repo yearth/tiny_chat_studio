@@ -4,7 +4,7 @@ import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { useMessage, saveMessage } from "@/hooks/useMessage";
 import { useWelcomeStorage } from "@/hooks/useWelcomeStorage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { use } from "react";
 import { Message } from "@prisma/client";
 import { useMount, useUpdateEffect } from "react-use";
@@ -31,6 +31,9 @@ export default function ChatPage({ params }: { params: any }) {
     "deepseek/deepseek-chat:free"
   );
 
+  // 记录 AI 响应请求开始的时间戳
+  const [aiFetchStartTime, setAiFetchStartTime] = useState<number | null>(null);
+
   const {
     messages,
     sendUserMessage,
@@ -41,6 +44,13 @@ export default function ChatPage({ params }: { params: any }) {
     streamingMessageId,
     streamingContent,
   } = useMessage(chatId);
+
+  // 当 isFetchingAIResponse 变为 false 时，重置 aiFetchStartTime
+  useEffect(() => {
+    if (!isFetchingAIResponse) {
+      setAiFetchStartTime(null);
+    }
+  }, [isFetchingAIResponse]);
 
   useMount(() => {
     const fromWelcome = getIsFromWelcome();
@@ -101,9 +111,6 @@ export default function ChatPage({ params }: { params: any }) {
     sendWelcomeMessage();
   }, [welcomeData]);
 
-  console.log("isSendingUserMessage", isSendingUserMessage);
-  console.log("isFetchingAIResponse", isFetchingAIResponse);
-
   return (
     <div className="flex-1 flex flex-col h-full bg-background text-foreground">
       <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
@@ -128,6 +135,8 @@ export default function ChatPage({ params }: { params: any }) {
             streamingMessageId={streamingMessageId}
             currentModelId={currentModelId}
             conversationId={chatId || undefined}
+            isFetchingAIResponse={isFetchingAIResponse}
+            aiFetchStartTime={aiFetchStartTime}
           />
         </div>
       </div>
@@ -145,7 +154,8 @@ export default function ChatPage({ params }: { params: any }) {
                   modelId: modelId,
                 });
 
-                // 然后获取 AI 响应
+                // 记录开始时间并获取 AI 响应
+                setAiFetchStartTime(Date.now());
                 await fetchAIResponse({
                   modelId: modelId,
                 });

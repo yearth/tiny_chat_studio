@@ -3,7 +3,10 @@ import { logToConsole } from "../utils/logger";
 import { generateDeepSeekResponse } from "./deepseek";
 import { generateOpenAIResponse } from "./openai";
 import { generateQwenResponse } from "./qwen";
-import { generateOpenRouterResponse, generateOpenRouterStreamResponse } from "./openrouter";
+import {
+  generateOpenRouterResponse,
+  generateOpenRouterStreamResponse,
+} from "./openrouter";
 
 /**
  * 根据模型生成响应的统一入口
@@ -78,12 +81,15 @@ export async function* generateStreamResponse(
   // 如果是 OpenRouter Deepseek 模型，使用真正的流式 API
   if (modelId.includes("deepseek/deepseek-chat:free")) {
     logToConsole("Using real streaming for OpenRouter");
-    for await (const chunk of generateOpenRouterStreamResponse(messages, modelId)) {
+    for await (const chunk of generateOpenRouterStreamResponse(
+      messages,
+      modelId
+    )) {
       yield chunk;
     }
     return; // 结束生成器函数
   }
-  
+
   // 对于其他模型，将完整响应分成小块，模拟流式输出
   const chunks = fullResponse.split(" ");
 

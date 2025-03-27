@@ -36,7 +36,7 @@ interface UseMessageResult {
   fetchMessages: (chatId: string) => Promise<void>;
   sendUserMessage: (params: SendUserMessageParams) => Promise<Message>;
   fetchAIResponse: (params?: FetchAIResponseParams) => Promise<void>;
-  abortFetchAIResponse: () => void; // 新增中止 AI 响应的函数
+  abortFetchAIResponse: () => void; // 中止 AI 响应的函数
   isSendingUserMessage: boolean;
   isFetchingAIResponse: boolean;
   streamingMessageId: string | null;
@@ -63,101 +63,6 @@ export const saveMessage = async (
   const data = await response.json();
   console.log("🔍 ~  ~ src/hooks/useMessage.ts:52 ~ data:", data);
   return data.message;
-};
-
-// 发送消息给 AI 模型并获取响应
-const sendMessageToAI = async (
-  messages: Message[],
-  chatId: string,
-  modelId?: string,
-  onStreamChunk?: (chunk: string) => void,
-  abortSignal?: AbortSignal
-) => {
-  // 将消息格式化为 AI API 所需的格式
-  const formattedMessages = messages.map((msg) => ({
-    role: msg.role,
-    content: msg.content,
-    modelId: msg.modelId,
-  }));
-
-  // 调用 AI API
-  const response = await fetch(`/api/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messages: formattedMessages,
-      chatId,
-      modelId,
-    }),
-    signal: abortSignal, // 添加中止信号
-  });
-
-  if (!response.ok) {
-    throw new Error(`AI 响应失败: ${response.statusText}`);
-  }
-
-  // 如果提供了流式处理回调，则处理流式响应
-  if (
-    onStreamChunk &&
-    response.headers.get("Content-Type")?.includes("text/event-stream")
-  ) {
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (reader) {
-      let buffer = "";
-
-      try {
-        while (true) {
-          // 检查是否已中止
-          if (abortSignal?.aborted) {
-            reader.cancel();
-            break;
-          }
-          
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          // 再次检查是否已中止
-          if (abortSignal?.aborted) {
-            reader.cancel();
-            break;
-          }
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") return response;
-
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.chunk) {
-                  onStreamChunk(parsed.chunk);
-                }
-              } catch (e) {
-                console.error("Error parsing SSE data:", e);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        // 如果是中止错误，静默处理
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          console.log('流式响应已被用户中止');
-        } else {
-          throw error; // 重新抛出其他错误
-        }
-      }
-    }
-  }
-
-  return response;
 };
 
 export function useMessage(chatId?: string): UseMessageResult {
@@ -189,17 +94,23 @@ export function useMessage(chatId?: string): UseMessageResult {
 
   // 流式消息状态
   const [streamingContent, setStreamingContent] = useState<string>("");
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
-  
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null
+  );
+
   // 中止控制器状态
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   // 1. 发送用户消息的 mutation
-  const { 
-    mutateAsync: sendUserMessageMutation, 
-    isPending: isSendingUserMessage 
+  const {
+    mutateAsync: sendUserMessageMutation,
+    isPending: isSendingUserMessage,
   } = useMutation({
-    mutationFn: async ({ content, modelId }: SendUserMessageParams): Promise<Message> => {
+    mutationFn: async ({
+      content,
+      modelId,
+    }: SendUserMessageParams): Promise<Message> => {
       if (!chatId) throw new Error("聊天 ID 不能为空");
 
       // 保存用户消息到数据库
@@ -222,51 +133,111 @@ export function useMessage(chatId?: string): UseMessageResult {
   });
 
   // 2. 获取 AI 响应的 mutation
-  const { 
-    mutateAsync: fetchAIResponseMutation, 
-    isPending: isFetchingAIResponse 
+  const {
+    mutateAsync: fetchAIResponseMutation,
+    isPending: isFetchingAIResponse,
   } = useMutation({
     mutationFn: async ({ modelId }: FetchAIResponseParams = {}) => {
       if (!chatId) throw new Error("聊天 ID 不能为空");
 
       // 从缓存中获取当前消息列表（包括刚刚添加的用户消息）
-      const currentMessages = queryClient.getQueryData<Message[]>(
-        [QueryKeys.MESSAGES, chatId]
-      ) || [];
+      const currentMessages =
+        queryClient.getQueryData<Message[]>([QueryKeys.MESSAGES, chatId]) || [];
 
       // 设置流式状态
       const tempStreamingId = `streaming-${Date.now()}`;
       setStreamingMessageId(tempStreamingId);
       setStreamingContent("");
-      
+
       // 创建新的中止控制器
       const controller = new AbortController();
       setAbortController(controller);
 
-      // 处理流式响应的回调
-      const handleStreamChunk = (chunk: string) => {
-        setStreamingContent((prev) => prev + chunk);
-      };
-
       try {
-        // 发送消息给 AI 并获取响应
-        await sendMessageToAI(
-          currentMessages,
-          chatId,
-          modelId,
-          handleStreamChunk,
-          controller.signal // 传递中止信号
-        );
+        // 将消息格式化为 AI API 所需的格式
+        const formattedMessages = currentMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+          modelId: msg.modelId,
+        }));
 
-        // 刷新消息列表以获取 AI 响应
-        // 由于 AI 响应已经通过 API 保存到数据库，我们只需要刷新查询
-        await queryClient.invalidateQueries({
-          queryKey: [QueryKeys.MESSAGES, chatId],
+        // 直接调用 API 并获取流式响应
+        const response = await fetch(`/api/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: formattedMessages,
+            chatId,
+            modelId,
+          }),
+          signal: controller.signal, // 传递中止信号
         });
+
+        if (!response.ok) {
+          throw new Error(`AI 响应失败: ${response.statusText}`);
+        }
+
+        // 处理 Vercel AI SDK 生成的标准 SSE 流
+        if (response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          try {
+            let buffer = "";
+            
+            while (true) {
+              // 检查是否已中止
+              if (controller.signal.aborted) {
+                reader.cancel();
+                break;
+              }
+
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              // 再次检查是否已中止
+              if (controller.signal.aborted) {
+                reader.cancel();
+                break;
+              }
+
+              // 解码二进制数据
+              const chunk = decoder.decode(value, { stream: true });
+              buffer += chunk;
+              
+              // 处理 Vercel AI SDK 的标准 SSE 格式
+              // 格式通常为 0:"chunk1"\n0:"chunk2"\n...
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || "";
+
+              for (const line of lines) {
+                // 匹配 Vercel AI SDK 的标准格式 0:"text"
+                const match = line.match(/^\d+:"(.+)"$/);
+                if (match && match[1]) {
+                  // 提取文本内容并更新状态
+                  const textChunk = match[1].replace(/\\n/g, "\n").replace(/\\(.)/g, "$1");
+                  setStreamingContent((prev) => prev + textChunk);
+                }
+              }
+            }
+          } catch (error) {
+            // 特别处理中止错误
+            if (error instanceof DOMException && error.name === "AbortError") {
+              console.log("流式响应已被用户中止");
+            } else {
+              throw error; // 重新抛出其他错误
+            }
+          }
+        }
+        
+        // 注意：不再需要 invalidateQueries，因为后端通过 onFinish 回调已经保存了完整响应
+        // 后端完成流式传输后会自动将完整的 AI 响应保存到数据库
       } catch (error) {
         // 特别处理中止错误
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          console.log('AI 响应已被用户中止');
+        if (error instanceof DOMException && error.name === "AbortError") {
+          console.log("AI 响应已被用户中止");
         } else {
           console.error("获取 AI 响应失败:", error);
           throw error;
@@ -281,15 +252,19 @@ export function useMessage(chatId?: string): UseMessageResult {
   });
 
   // 封装 sendUserMessage 函数，返回保存的用户消息
-  const sendUserMessage = async (params: SendUserMessageParams): Promise<Message> => {
+  const sendUserMessage = async (
+    params: SendUserMessageParams
+  ): Promise<Message> => {
     return await sendUserMessageMutation(params);
   };
 
   // 封装 fetchAIResponse 函数
-  const fetchAIResponse = async (params: FetchAIResponseParams = {}): Promise<void> => {
+  const fetchAIResponse = async (
+    params: FetchAIResponseParams = {}
+  ): Promise<void> => {
     await fetchAIResponseMutation(params);
   };
-  
+
   // 封装中止 AI 响应的函数
   const abortFetchAIResponse = () => {
     if (abortController) {
@@ -308,7 +283,7 @@ export function useMessage(chatId?: string): UseMessageResult {
     fetchMessages,
     sendUserMessage,
     fetchAIResponse,
-    abortFetchAIResponse, // 添加中止函数
+    abortFetchAIResponse,
     isSendingUserMessage,
     isFetchingAIResponse,
     streamingMessageId,

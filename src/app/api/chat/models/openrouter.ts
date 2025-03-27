@@ -45,7 +45,7 @@ export async function* generateOpenRouterStreamResponse(
 
     // OpenRouter API端点
     const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-    
+
     // 准备消息，添加系统消息
     const formattedMessages = [
       { role: "system", content: "You are a helpful assistant." },
@@ -95,22 +95,22 @@ export async function* generateOpenRouterStreamResponse(
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      
+
       // 解码二进制数据
       buffer += decoder.decode(value, { stream: true });
-      
+
       // 处理 SSE 格式的数据
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-      
+
       for (const line of lines) {
         const trimmedLine = line.trim();
         if (!trimmedLine || trimmedLine.startsWith(":")) continue; // 忽略空行和注释
-        
+
         if (trimmedLine.startsWith("data: ")) {
           const data = trimmedLine.slice(6);
           if (data === "[DONE]") return;
-          
+
           try {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
@@ -123,10 +123,9 @@ export async function* generateOpenRouterStreamResponse(
         }
       }
     }
-    
+
     // 处理最后的缓冲区
     decoder.decode();
-    
   } catch (error: any) {
     logToConsole("Error in OpenRouter streaming:", error);
     yield `[OpenRouter] 流式生成响应时出错: ${error.message}`;

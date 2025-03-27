@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Copy, Check, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { MessageBubble } from "./message-bubble";
@@ -20,6 +20,8 @@ interface MessageListProps {
   currentModelId?: string;
   conversationId?: string;
   className?: string;
+  isFetchingAIResponse?: boolean;
+  aiFetchStartTime?: number | null;
 }
 
 export function MessageList({
@@ -30,11 +32,16 @@ export function MessageList({
   currentModelId,
   conversationId,
   className,
+  isFetchingAIResponse = false,
+  aiFetchStartTime = null,
 }: MessageListProps) {
   // 用于跟踪哪些消息已被复制
   const [copiedMessageIds, setCopiedMessageIds] = useState<
     Record<string, boolean>
   >({});
+  
+  // 计时器状态
+  const [elapsedTime, setElapsedTime] = useState<string>("0.0s");
 
   // 复制消息内容到剪贴板
   const copyMessageContent = async (
@@ -60,6 +67,38 @@ export function MessageList({
   const getMessageId = (message: Message, index: number) => {
     return message.id || `msg-${index}`;
   };
+
+  // 计时器效果
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    // 只有当满足以下条件时才启动计时器：
+    // 1. 正在获取 AI 响应 (isFetchingAIResponse 为 true)
+    // 2. 有流式消息 ID (streamingMessageId 不为 null)
+    // 3. 有开始时间 (aiFetchStartTime 不为 null)
+    // 4. 流式内容为空 (等待第一个数据块)
+    const shouldShowTimer = 
+      isFetchingAIResponse && 
+      streamingMessageId !== null && 
+      aiFetchStartTime !== null && 
+      messages.some(m => m.id === streamingMessageId && m.content === "");
+    
+    if (shouldShowTimer && aiFetchStartTime) {
+      // 每 100 毫秒更新一次计时器
+      intervalId = setInterval(() => {
+        const elapsed = (Date.now() - aiFetchStartTime) / 1000;
+        setElapsedTime(`${elapsed.toFixed(1)}s`);
+      }, 100);
+    }
+    
+    // 清理函数
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isFetchingAIResponse, streamingMessageId, aiFetchStartTime, messages]);
+
 
   return (
     <ScrollArea className={cn("h-full w-full", className)}>
@@ -95,6 +134,19 @@ export function MessageList({
                   isUser={message.role === "user"}
                   timestamp={message.timestamp}
                 />
+
+                {/* 等待 AI 响应的加载指示器和计时器 */}
+                {!isPreview && 
+                 message.role === "assistant" && 
+                 message.id === streamingMessageId && 
+                 message.content === "" && 
+                 isFetchingAIResponse && 
+                 aiFetchStartTime && (
+                  <div className="flex items-center text-muted-foreground mt-2 ml-1">
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    <span className="text-xs">{elapsedTime}</span>
+                  </div>
+                )}
 
                 {/* 操作按钮（非预览模式下显示） */}
                 {!isPreview && (
