@@ -21,23 +21,23 @@ export default function ChatPage({ params }: { params: any }) {
     clearAll: clearWelcomeStorage,
   } = useWelcomeStorage();
 
-  // 初始化状态
   const [welcomeData, setWelcomeData] = useState<{
     fromWelcome: boolean;
     welcomeMessage: string;
     welcomeModelId: string;
   }>({ fromWelcome: false, welcomeMessage: "", welcomeModelId: "" });
 
-  // 使用 useState 来跟踪当前选择的模型
   const [currentModelId, setCurrentModelId] = useState<string>(
     "deepseek/deepseek-chat:free"
   );
 
-  // 使用 useMessage 钩子获取消息列表和发送消息的功能
   const {
     messages,
-    sendMessage,
-    isSending,
+    sendUserMessage,
+    fetchAIResponse,
+    abortFetchAIResponse,
+    isSendingUserMessage,
+    isFetchingAIResponse,
     streamingMessageId,
     streamingContent,
   } = useMessage(chatId);
@@ -75,16 +75,14 @@ export default function ChatPage({ params }: { params: any }) {
         try {
           console.log("正在发送欢迎消息:", welcomeData.welcomeMessage);
 
-          // 先保存用户消息到数据库
-          // await saveMessage(chatId, {
-          //   content: welcomeData.welcomeMessage,
-          //   role: "user",
-          //   modelId: welcomeData.welcomeModelId,
-          // });
-
-          // 然后发送消息给 AI
-          await sendMessage({
+          // 先发送用户消息
+          await sendUserMessage({
             content: welcomeData.welcomeMessage,
+            modelId: welcomeData.welcomeModelId,
+          });
+
+          // 然后获取 AI 响应
+          await fetchAIResponse({
             modelId: welcomeData.welcomeModelId,
           });
 
@@ -102,6 +100,9 @@ export default function ChatPage({ params }: { params: any }) {
 
     sendWelcomeMessage();
   }, [welcomeData]);
+
+  console.log("isSendingUserMessage", isSendingUserMessage);
+  console.log("isFetchingAIResponse", isFetchingAIResponse);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background text-foreground">
@@ -136,19 +137,25 @@ export default function ChatPage({ params }: { params: any }) {
           <EnhancedChatInput
             onSendMessage={async (message, modelId, files) => {
               try {
-                // 更新当前使用的模型 ID
                 setCurrentModelId(modelId);
 
-                // 发送消息给 AI 并获取响应
-                await sendMessage({
+                // 先发送用户消息
+                await sendUserMessage({
                   content: message,
+                  modelId: modelId,
+                });
+
+                // 然后获取 AI 响应
+                await fetchAIResponse({
                   modelId: modelId,
                 });
               } catch (error) {
                 console.error("发送消息失败:", error);
               }
             }}
-            disabled={isSending}
+            isSendingUserMessage={isSendingUserMessage}
+            isFetchingAIResponse={isFetchingAIResponse}
+            onAbortFetchAIResponse={abortFetchAIResponse}
             onModelChange={setCurrentModelId}
             initialModelId={currentModelId}
           />

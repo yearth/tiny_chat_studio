@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Paperclip, ChevronDown } from "lucide-react";
+import { Send, Paperclip, ChevronDown, Loader2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { availableModels } from "@/data/models";
@@ -18,7 +18,10 @@ interface EnhancedChatInputProps {
     modelId: string,
     files?: File[]
   ) => Promise<void>;
-  disabled?: boolean;
+  // 替换旧的 loading 和 disabled 状态
+  isSendingUserMessage: boolean;
+  isFetchingAIResponse: boolean;
+  onAbortFetchAIResponse: () => void;
   onModelChange?: (modelId: string) => void;
   initialModelId?: string;
   className?: string;
@@ -30,11 +33,15 @@ interface EnhancedChatInputProps {
  */
 export function EnhancedChatInput({
   onSendMessage,
-  disabled = false,
+  isSendingUserMessage = false,
+  isFetchingAIResponse = false,
+  onAbortFetchAIResponse,
   onModelChange,
   initialModelId = availableModels[0].id,
   className = "",
 }: EnhancedChatInputProps) {
+  // 计算总的禁用状态
+  const isDisabled = isSendingUserMessage || isFetchingAIResponse;
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState(initialModelId);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -43,7 +50,7 @@ export function EnhancedChatInput({
   const { usageCount, isLimitReached, incrementUsage, limit } = useUsageLimit();
 
   const handleSend = async () => {
-    if (input.trim() && !disabled) {
+    if (input.trim() && !isDisabled) {
       // 检查使用限制
       const canSend = await incrementUsage();
       if (!canSend) {
@@ -110,14 +117,14 @@ export function EnhancedChatInput({
                 setInput(e.target.value)
               }
               onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !isDisabled) {
                   e.preventDefault();
                   handleSend();
                 }
               }}
               placeholder="Hi, 想聊点什么？"
               className="min-h-24 border-none bg-white dark:bg-[#0A0A0A] text-black dark:text-white resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              disabled={disabled}
+              disabled={isDisabled}
             />
           </div>
 
@@ -125,14 +132,14 @@ export function EnhancedChatInput({
           <div className="flex items-center justify-between px-3 py-2 border-t border-border">
             <div className="flex items-center gap-2">
               {/* 文件上传按钮 */}
-              <label className="cursor-pointer p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent">
+              <label className={`p-1 text-muted-foreground rounded-md ${!isDisabled ? 'cursor-pointer hover:text-foreground hover:bg-accent' : 'opacity-50 cursor-not-allowed'}`}>
                 <Paperclip className="h-5 w-5" />
                 <input
                   type="file"
                   multiple
                   className="hidden"
                   onChange={handleFileChange}
-                  disabled={disabled}
+                  disabled={isDisabled}
                 />
               </label>
 
@@ -143,7 +150,7 @@ export function EnhancedChatInput({
                     variant="ghost"
                     size="sm"
                     className="h-8 gap-1 text-xs text-muted-foreground rounded-md hover:bg-accent"
-                    disabled={disabled}
+                    disabled={isDisabled}
                   >
                     {currentModel.name}
                     <ChevronDown className="h-3 w-3" />
@@ -174,17 +181,35 @@ export function EnhancedChatInput({
               </Popover>
             </div>
 
-            {/* 发送按钮 */}
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
-              onClick={handleSend}
-              disabled={disabled || !input.trim()}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
+            {/* 发送/停止按钮 */}
+            {isFetchingAIResponse ? (
+              // 停止按钮 - 当 AI 正在响应时显示
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-destructive hover:text-destructive/90 rounded-full hover:bg-destructive/10"
+                onClick={onAbortFetchAIResponse}
+              >
+                <Square className="h-5 w-5" />
+              </Button>
+            ) : (
+              // 发送按钮 - 当 AI 未响应时显示
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
+                onClick={handleSend}
+                disabled={isDisabled || !input.trim()}
+              >
+                {isSendingUserMessage ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
 

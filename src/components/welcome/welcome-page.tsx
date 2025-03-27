@@ -114,7 +114,9 @@ export function WelcomePage() {
           <div className="mt-8">
             <EnhancedChatInput
               onSendMessage={handleSendMessage}
-              disabled={isCreating || isAddingChat}
+              isSendingUserMessage={isCreating || isAddingChat}
+              isFetchingAIResponse={false}
+              onAbortFetchAIResponse={() => {}}
             />
           </div>
           {error && (
