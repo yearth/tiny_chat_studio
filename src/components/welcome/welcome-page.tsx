@@ -3,21 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { EnhancedChatInput } from "@/components/chat/enhanced-chat-input";
-import { DEV_USER_ID } from "@/constants/mockId";
 import { useChat } from "@/hooks/useChat";
 import { useWelcomeStorage } from "@/hooks/useWelcomeStorage";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserId } from "@/hooks/useUserId";
 
 export function WelcomePage() {
   const router = useRouter();
+  const userId = useUserId();
+
   const { data: session } = useSession();
-
-  const userId =
-    process.env.NODE_ENV === "production" && session?.user?.id
-      ? session.user.id
-      : DEV_USER_ID;
-
   const { addChat, isAddingChat } = useChat(userId);
   const { setMessage, setModelId, setIsFromWelcome } = useWelcomeStorage();
 

@@ -22,19 +22,15 @@ import { cn, formatDate, formatTime } from "@/lib/utils";
 import { MessagePreview } from "./message-preview";
 import { useChat } from "@/hooks/useChat";
 import { useMessage } from "@/hooks/useMessage";
-import { DEV_USER_ID } from "@/constants/mockId";
+import { useUserId } from "@/hooks/useUserId";
 
 export function ChatHistoryDialog() {
   const router = useRouter();
-  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  const userId =
-    process.env.NODE_ENV === "production" && session?.user?.id
-      ? session.user.id
-      : DEV_USER_ID; // 开发环境使用测试用户ID
+  const userId = useUserId();
 
   const {
     chats,

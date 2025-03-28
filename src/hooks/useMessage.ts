@@ -232,8 +232,8 @@ export function useMessage(chatId?: string): UseMessageResult {
           }
         }
         
-        // 注意：不再需要 invalidateQueries，因为后端通过 onFinish 回调已经保存了完整响应
-        // 后端完成流式传输后会自动将完整的 AI 响应保存到数据库
+        // 后端通过 onFinish 回调已经将完整响应保存到数据库
+        // 但前端需要通过 invalidateQueries 刷新缓存以显示最新消息
       } catch (error) {
         // 特别处理中止错误
         if (error instanceof DOMException && error.name === "AbortError") {
@@ -243,10 +243,14 @@ export function useMessage(chatId?: string): UseMessageResult {
           throw error;
         }
       } finally {
-        // 无论成功与否，都重置流式状态和中止控制器
+        // 清理前端流式状态
         setStreamingMessageId(null);
         setStreamingContent("");
         setAbortController(null);
+        
+        // 使当前聊天的消息查询失效，触发 React Query 重新获取数据。
+        // 这将拉取包括后端在 onFinish 中保存的最新 AI 消息。
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.MESSAGES, chatId] });
       }
     },
   });
