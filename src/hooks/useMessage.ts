@@ -66,6 +66,8 @@ export const saveMessage = async (
 };
 
 export function useMessage(chatId?: string): UseMessageResult {
+  console.log("[useMessage Hook Execution] ChatId:", chatId);
+
   const queryClient = useQueryClient();
 
   const {
@@ -145,27 +147,49 @@ export function useMessage(chatId?: string): UseMessageResult {
         queryClient.getQueryData<Message[]>([QueryKeys.MESSAGES, chatId]) || [];
 
       // 生成临时ID用于占位消息，添加随机数确保唯一性
-      const tempStreamingId = `streaming-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      
+      const tempStreamingId = `streaming-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 10)}`;
+      console.log(
+        `[useMessage - Start Fetch] Generated tempStreamingId: ${tempStreamingId}`
+      ); // <-- 新增日志
+
       // 立即在缓存中添加占位符消息对象
       queryClient.setQueryData(
         [QueryKeys.MESSAGES, chatId],
         (oldData: Message[] = []) => {
-          return [
+          console.log(
+            "[useMessage - Add Placeholder] Before:",
+            oldData.map((m) => ({
+              id: m.id,
+              content: m.content.slice(0, 10) + "...",
+              isStreaming: (m as any).isStreaming,
+            }))
+          );
+          const newData = [
             ...oldData,
             {
               id: tempStreamingId,
-              role: 'assistant',
-              content: '',
+              role: "assistant",
+              content: "",
               chatId,
               createdAt: new Date(),
               modelId: modelId || undefined,
               isStreaming: true, // 临时标记，表示这是一个正在流式传输的消息
             } as Message & { isStreaming?: boolean },
           ];
+          console.log(
+            "[useMessage - Add Placeholder] After:",
+            newData.map((m) => ({
+              id: m.id,
+              content: m.content.slice(0, 10) + "...",
+              isStreaming: (m as any).isStreaming,
+            }))
+          );
+          return newData;
         }
       );
-      
+
       // 设置流式状态（仍然保留这些状态以保持向后兼容）
       setStreamingMessageId(tempStreamingId);
       setStreamingContent("");
@@ -209,7 +233,7 @@ export function useMessage(chatId?: string): UseMessageResult {
           try {
             let buffer = "";
             let eventName = "";
-            
+
             while (true) {
               // 检查是否已中止
               if (controller.signal.aborted) {
@@ -229,7 +253,7 @@ export function useMessage(chatId?: string): UseMessageResult {
               // 解码二进制数据
               const chunk = decoder.decode(value, { stream: true });
               buffer += chunk;
-              
+
               // 处理 SSE 格式，支持事件名称和数据
               const lines = buffer.split("\n");
               buffer = lines.pop() || "";
@@ -240,26 +264,38 @@ export function useMessage(chatId?: string): UseMessageResult {
                   eventName = line.substring("event:".length).trim();
                   continue;
                 }
-                
+
                 // 检查是否是数据行
                 if (line.startsWith("data:")) {
                   const data = line.substring("data:".length).trim();
-                  
+
                   // 处理 message_complete 事件
                   if (eventName === "message_complete") {
                     try {
                       // 解析最终消息数据
                       const finalMessageData = JSON.parse(data);
-                      console.log("收到 message_complete 事件:", finalMessageData);
-                      
+                      console.log(
+                        "[useMessage - Complete Event] Received final data:",
+                        finalMessageData
+                      );
+
                       // 使用 setQueryData 更新缓存中的消息
                       queryClient.setQueryData(
                         [QueryKeys.MESSAGES, chatId],
                         (oldData: Message[] = []) => {
-                          return oldData.map((msg) => {
-                            // 查找并替换临时消息
+                          console.log(
+                            "[useMessage - Replace Final] Before:",
+                            oldData.map((m) => ({
+                              id: m.id,
+                              content: m.content.slice(0, 10) + "...",
+                              isStreaming: (m as any).isStreaming,
+                            }))
+                          );
+                          const newData = oldData.map((msg) => {
                             if (msg.id === finalMessageData.tempId) {
-                              // 创建最终消息对象，确保日期类型正确
+                              console.log(
+                                `[useMessage - Replace Final] Replacing message with tempId: ${finalMessageData.tempId} with finalId: ${finalMessageData.id}`
+                              );
                               return {
                                 id: finalMessageData.id,
                                 content: finalMessageData.content,
@@ -267,48 +303,70 @@ export function useMessage(chatId?: string): UseMessageResult {
                                 chatId,
                                 modelId: finalMessageData.modelId,
                                 createdAt: new Date(finalMessageData.createdAt),
-                                // 移除 isStreaming 标记
                               } as Message;
                             }
                             return msg;
                           });
+                          console.log(
+                            "[useMessage - Replace Final] After:",
+                            newData.map((m) => ({
+                              id: m.id,
+                              content: m.content.slice(0, 10) + "...",
+                            }))
+                          );
+                          return newData;
                         }
                       );
-                      
+
                       // 重置事件名称
                       eventName = "";
                     } catch (error) {
-                      console.error("解析 message_complete 事件数据失败:", error);
+                      console.error(
+                        "解析 message_complete 事件数据失败:",
+                        error
+                      );
                     }
                     continue;
                   }
-                  
+
                   // 处理普通数据行（流式内容）
                   try {
                     // 调试原始数据
                     console.log("原始数据行:", data);
-                    
+
                     // 尝试解析 Vercel AI SDK 格式 (0:"text")
                     // 使用更精确的正则表达式，确保只提取引号内的内容
                     const match = data.match(/^(\d+:)"(.*)"$/);
-                    
+
                     if (match && match[2] !== undefined) {
                       // 调试提取的原始内容
                       console.log("正则提取的原始内容:", match[2]);
-                      
+
                       // 提取文本内容并处理转义字符
                       // 注意：使用 match[2] 而不是 match[1]，match[1] 是前缀 (0:)
                       let textChunk = match[2];
-                      
+
                       // 处理转义字符
-                      textChunk = textChunk.replace(/\\n/g, "\n").replace(/\\(.)/g, "$1");
-                      
+                      textChunk = textChunk
+                        .replace(/\\n/g, "\n")
+                        .replace(/\\(.)/g, "$1");
+
+                      console.log(
+                        `[useMessage - Update Chunk] Received chunk for tempId ${tempStreamingId}:`,
+                        textChunk.slice(0, 50) + "..."
+                      );
+
                       // 调试最终处理后的文本内容
-                      console.log("处理后的流式数据块:", textChunk.length < 50 ? textChunk : textChunk.substring(0, 50) + "...");
-                      
+                      console.log(
+                        "处理后的流式数据块:",
+                        textChunk.length < 50
+                          ? textChunk
+                          : textChunk.substring(0, 50) + "..."
+                      );
+
                       // 更新流式内容状态（用于向后兼容）
                       setStreamingContent((prev) => prev + textChunk);
-                      
+
                       // 更新缓存中的占位符消息
                       queryClient.setQueryData(
                         [QueryKeys.MESSAGES, chatId],
@@ -331,7 +389,7 @@ export function useMessage(chatId?: string): UseMessageResult {
                   } catch (error) {
                     console.error("处理流式数据块失败:", error);
                   }
-                  
+
                   // 重置事件名称
                   eventName = "";
                 }
@@ -346,7 +404,7 @@ export function useMessage(chatId?: string): UseMessageResult {
             }
           }
         }
-        
+
         // 后端通过 onFinish 回调已经将完整响应保存到数据库
         // 但前端需要通过 invalidateQueries 刷新缓存以显示最新消息
       } catch (error) {
@@ -358,26 +416,43 @@ export function useMessage(chatId?: string): UseMessageResult {
           throw error;
         }
       } finally {
+        console.log("[useMessage - Finally] Entering finally block");
         // 清理前端流式状态
         setStreamingMessageId(null);
         setStreamingContent("");
         setAbortController(null);
-        
+
         // 安全检查：移除任何可能残留的带有 isStreaming 标记的消息
         queryClient.setQueryData(
           [QueryKeys.MESSAGES, chatId],
           (oldData: Message[] = []) => {
-            return oldData.filter((msg) => {
-              // 过滤掉任何带有 isStreaming 标记的临时消息
-              // 注意：不仅检查特定ID，而是检查所有带有 isStreaming 标记的消息
-              const isTemporaryMessage = (msg as any).isStreaming === true;
-              return !isTemporaryMessage;
-            });
+            console.log(
+              "[useMessage - Finally Cleanup] Before:",
+              oldData.map((m) => ({
+                id: m.id,
+                content: m.content.slice(0, 10) + "...",
+                isStreaming: (m as any).isStreaming,
+              }))
+            ); // <-- 新增日志
+            const newData = oldData.filter(
+              (msg) =>
+                !(
+                  msg.id === tempStreamingId &&
+                  (msg as any).isStreaming === true
+                )
+            );
+            console.log(
+              "[useMessage - Finally Cleanup] After:",
+              newData.map((m) => ({
+                id: m.id,
+                content: m.content.slice(0, 10) + "...",
+                isStreaming: (m as any).isStreaming,
+              }))
+            ); // <-- 新增日志
+            return newData;
           }
         );
-        
-        // 移除 invalidateQueries 调用，因为我们现在使用 setQueryData 直接更新缓存
-        // queryClient.invalidateQueries({ queryKey: [QueryKeys.MESSAGES, chatId] });
+        console.log("[useMessage - Finally] Exiting finally block"); // <-- 新增日志
       }
     },
   });

@@ -10,6 +10,8 @@ import { Message } from "@prisma/client";
 import { useMount, useUpdateEffect } from "react-use";
 
 export default function ChatPage({ params }: { params: any }) {
+  console.log("[Parent Component Render] params:", params);
+
   const resolvedParams =
     typeof params === "object" && !("then" in params) ? params : use(params);
   const chatId = resolvedParams.chatId;
@@ -116,22 +118,7 @@ export default function ChatPage({ params }: { params: any }) {
       <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
         <div className="max-w-3xl mx-auto pt-4 pb-4">
           <MessageList
-            messages={
-              streamingMessageId
-                ? [
-                    ...messages,
-                    {
-                      id: streamingMessageId,
-                      role: "assistant",
-                      content: streamingContent,
-                      chatId: chatId,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      modelId: currentModelId,
-                    } as Message,
-                  ]
-                : messages
-            }
+            messages={messages}
             streamingMessageId={streamingMessageId}
             currentModelId={currentModelId}
             conversationId={chatId || undefined}

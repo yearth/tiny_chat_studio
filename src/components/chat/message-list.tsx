@@ -105,6 +105,16 @@ export function MessageList({
     };
   }, [isFetchingAIResponse, streamingMessageId, aiFetchStartTime, messages]);
 
+  console.log(
+    "[MessageList - Render] Received messages:",
+    messages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content.slice(0, 30) + "...",
+      isStreaming: (m as any).isStreaming,
+    }))
+  );
+
   return (
     <ScrollArea className={cn("h-full w-full", className)}>
       <div className="flex flex-col space-y-8">
