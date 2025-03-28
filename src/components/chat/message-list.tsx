@@ -39,7 +39,7 @@ export function MessageList({
   const [copiedMessageIds, setCopiedMessageIds] = useState<
     Record<string, boolean>
   >({});
-  
+
   // 计时器状态
   const [elapsedTime, setElapsedTime] = useState<string>("0.0s");
 
@@ -68,21 +68,27 @@ export function MessageList({
     return message.id || `msg-${index}`;
   };
 
+  // 为消息生成唯一的 React key，确保即使 ID 相同也有不同的渲染键
+  const getMessageKey = (message: Message, index: number) => {
+    // 将消息的 ID 和索引结合，确保唯一性
+    return `${getMessageId(message, index)}-pos-${index}`;
+  };
+
   // 计时器效果
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
-    
+
     // 只有当满足以下条件时才启动计时器：
     // 1. 正在获取 AI 响应 (isFetchingAIResponse 为 true)
     // 2. 有流式消息 ID (streamingMessageId 不为 null)
     // 3. 有开始时间 (aiFetchStartTime 不为 null)
     // 4. 流式内容为空 (等待第一个数据块)
-    const shouldShowTimer = 
-      isFetchingAIResponse && 
-      streamingMessageId !== null && 
-      aiFetchStartTime !== null && 
-      messages.some(m => m.id === streamingMessageId && m.content === "");
-    
+    const shouldShowTimer =
+      isFetchingAIResponse &&
+      streamingMessageId !== null &&
+      aiFetchStartTime !== null &&
+      messages.some((m) => m.id === streamingMessageId && m.content === "");
+
     if (shouldShowTimer && aiFetchStartTime) {
       // 每 100 毫秒更新一次计时器
       intervalId = setInterval(() => {
@@ -90,7 +96,7 @@ export function MessageList({
         setElapsedTime(`${elapsed.toFixed(1)}s`);
       }, 100);
     }
-    
+
     // 清理函数
     return () => {
       if (intervalId) {
@@ -98,7 +104,6 @@ export function MessageList({
       }
     };
   }, [isFetchingAIResponse, streamingMessageId, aiFetchStartTime, messages]);
-
 
   return (
     <ScrollArea className={cn("h-full w-full", className)}>
@@ -114,7 +119,7 @@ export function MessageList({
             const isCopied = copiedMessageIds[messageId];
 
             return (
-              <div key={messageId} className="space-y-2">
+              <div key={getMessageKey(message, index)} className="space-y-2">
                 {/* 发送者标识 */}
                 <div
                   className={`text-sm font-medium text-muted-foreground ${
@@ -136,17 +141,17 @@ export function MessageList({
                 />
 
                 {/* 等待 AI 响应的加载指示器和计时器 */}
-                {!isPreview && 
-                 message.role === "assistant" && 
-                 message.id === streamingMessageId && 
-                 message.content === "" && 
-                 isFetchingAIResponse && 
-                 aiFetchStartTime && (
-                  <div className="flex items-center text-muted-foreground mt-2 ml-1">
-                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    <span className="text-xs">{elapsedTime}</span>
-                  </div>
-                )}
+                {!isPreview &&
+                  message.role === "assistant" &&
+                  message.id === streamingMessageId &&
+                  message.content === "" &&
+                  isFetchingAIResponse &&
+                  aiFetchStartTime && (
+                    <div className="flex items-center text-muted-foreground mt-2 ml-1">
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      <span className="text-xs">{elapsedTime}</span>
+                    </div>
+                  )}
 
                 {/* 操作按钮（非预览模式下显示） */}
                 {!isPreview && (

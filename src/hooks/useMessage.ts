@@ -144,8 +144,29 @@ export function useMessage(chatId?: string): UseMessageResult {
       const currentMessages =
         queryClient.getQueryData<Message[]>([QueryKeys.MESSAGES, chatId]) || [];
 
-      // 设置流式状态
-      const tempStreamingId = `streaming-${Date.now()}`;
+      // 生成临时ID用于占位消息，添加随机数确保唯一性
+      const tempStreamingId = `streaming-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      
+      // 立即在缓存中添加占位符消息对象
+      queryClient.setQueryData(
+        [QueryKeys.MESSAGES, chatId],
+        (oldData: Message[] = []) => {
+          return [
+            ...oldData,
+            {
+              id: tempStreamingId,
+              role: 'assistant',
+              content: '',
+              chatId,
+              createdAt: new Date(),
+              modelId: modelId || undefined,
+              isStreaming: true, // 临时标记，表示这是一个正在流式传输的消息
+            } as Message & { isStreaming?: boolean },
+          ];
+        }
+      );
+      
+      // 设置流式状态（仍然保留这些状态以保持向后兼容）
       setStreamingMessageId(tempStreamingId);
       setStreamingContent("");
 
@@ -161,7 +182,7 @@ export function useMessage(chatId?: string): UseMessageResult {
           modelId: msg.modelId,
         }));
 
-        // 直接调用 API 并获取流式响应
+        // 直接调用 API 并获取流式响应，传递临时ID
         const response = await fetch(`/api/chat`, {
           method: "POST",
           headers: {
@@ -171,6 +192,7 @@ export function useMessage(chatId?: string): UseMessageResult {
             messages: formattedMessages,
             chatId,
             modelId,
+            tempId: tempStreamingId, // 发送临时ID给后端
           }),
           signal: controller.signal, // 传递中止信号
         });
@@ -186,6 +208,7 @@ export function useMessage(chatId?: string): UseMessageResult {
 
           try {
             let buffer = "";
+            let eventName = "";
             
             while (true) {
               // 检查是否已中止
@@ -207,18 +230,110 @@ export function useMessage(chatId?: string): UseMessageResult {
               const chunk = decoder.decode(value, { stream: true });
               buffer += chunk;
               
-              // 处理 Vercel AI SDK 的标准 SSE 格式
-              // 格式通常为 0:"chunk1"\n0:"chunk2"\n...
+              // 处理 SSE 格式，支持事件名称和数据
               const lines = buffer.split("\n");
               buffer = lines.pop() || "";
 
               for (const line of lines) {
-                // 匹配 Vercel AI SDK 的标准格式 0:"text"
-                const match = line.match(/^\d+:"(.+)"$/);
-                if (match && match[1]) {
-                  // 提取文本内容并更新状态
-                  const textChunk = match[1].replace(/\\n/g, "\n").replace(/\\(.)/g, "$1");
-                  setStreamingContent((prev) => prev + textChunk);
+                // 检查是否是事件行
+                if (line.startsWith("event:")) {
+                  eventName = line.substring("event:".length).trim();
+                  continue;
+                }
+                
+                // 检查是否是数据行
+                if (line.startsWith("data:")) {
+                  const data = line.substring("data:".length).trim();
+                  
+                  // 处理 message_complete 事件
+                  if (eventName === "message_complete") {
+                    try {
+                      // 解析最终消息数据
+                      const finalMessageData = JSON.parse(data);
+                      console.log("收到 message_complete 事件:", finalMessageData);
+                      
+                      // 使用 setQueryData 更新缓存中的消息
+                      queryClient.setQueryData(
+                        [QueryKeys.MESSAGES, chatId],
+                        (oldData: Message[] = []) => {
+                          return oldData.map((msg) => {
+                            // 查找并替换临时消息
+                            if (msg.id === finalMessageData.tempId) {
+                              // 创建最终消息对象，确保日期类型正确
+                              return {
+                                id: finalMessageData.id,
+                                content: finalMessageData.content,
+                                role: finalMessageData.role,
+                                chatId,
+                                modelId: finalMessageData.modelId,
+                                createdAt: new Date(finalMessageData.createdAt),
+                                // 移除 isStreaming 标记
+                              } as Message;
+                            }
+                            return msg;
+                          });
+                        }
+                      );
+                      
+                      // 重置事件名称
+                      eventName = "";
+                    } catch (error) {
+                      console.error("解析 message_complete 事件数据失败:", error);
+                    }
+                    continue;
+                  }
+                  
+                  // 处理普通数据行（流式内容）
+                  try {
+                    // 调试原始数据
+                    console.log("原始数据行:", data);
+                    
+                    // 尝试解析 Vercel AI SDK 格式 (0:"text")
+                    // 使用更精确的正则表达式，确保只提取引号内的内容
+                    const match = data.match(/^(\d+:)"(.*)"$/);
+                    
+                    if (match && match[2] !== undefined) {
+                      // 调试提取的原始内容
+                      console.log("正则提取的原始内容:", match[2]);
+                      
+                      // 提取文本内容并处理转义字符
+                      // 注意：使用 match[2] 而不是 match[1]，match[1] 是前缀 (0:)
+                      let textChunk = match[2];
+                      
+                      // 处理转义字符
+                      textChunk = textChunk.replace(/\\n/g, "\n").replace(/\\(.)/g, "$1");
+                      
+                      // 调试最终处理后的文本内容
+                      console.log("处理后的流式数据块:", textChunk.length < 50 ? textChunk : textChunk.substring(0, 50) + "...");
+                      
+                      // 更新流式内容状态（用于向后兼容）
+                      setStreamingContent((prev) => prev + textChunk);
+                      
+                      // 更新缓存中的占位符消息
+                      queryClient.setQueryData(
+                        [QueryKeys.MESSAGES, chatId],
+                        (oldData: Message[] = []) => {
+                          return oldData.map((msg) => {
+                            if (msg.id === tempStreamingId) {
+                              return {
+                                ...msg,
+                                content: (msg.content || "") + textChunk,
+                              };
+                            }
+                            return msg;
+                          });
+                        }
+                      );
+                    } else {
+                      // 如果数据不符合预期格式，记录日志以便调试
+                      console.warn("收到非标准格式的数据行:", data);
+                    }
+                  } catch (error) {
+                    console.error("处理流式数据块失败:", error);
+                  }
+                  
+                  // 重置事件名称
+                  eventName = "";
                 }
               }
             }
@@ -248,9 +363,21 @@ export function useMessage(chatId?: string): UseMessageResult {
         setStreamingContent("");
         setAbortController(null);
         
-        // 使当前聊天的消息查询失效，触发 React Query 重新获取数据。
-        // 这将拉取包括后端在 onFinish 中保存的最新 AI 消息。
-        queryClient.invalidateQueries({ queryKey: [QueryKeys.MESSAGES, chatId] });
+        // 安全检查：移除任何可能残留的带有 isStreaming 标记的消息
+        queryClient.setQueryData(
+          [QueryKeys.MESSAGES, chatId],
+          (oldData: Message[] = []) => {
+            return oldData.filter((msg) => {
+              // 过滤掉任何带有 isStreaming 标记的临时消息
+              // 注意：不仅检查特定ID，而是检查所有带有 isStreaming 标记的消息
+              const isTemporaryMessage = (msg as any).isStreaming === true;
+              return !isTemporaryMessage;
+            });
+          }
+        );
+        
+        // 移除 invalidateQueries 调用，因为我们现在使用 setQueryData 直接更新缓存
+        // queryClient.invalidateQueries({ queryKey: [QueryKeys.MESSAGES, chatId] });
       }
     },
   });
