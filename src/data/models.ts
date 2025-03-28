@@ -3,10 +3,10 @@ import { AIModel } from "@/types/chat";
 // 可用的AI模型列表
 export const availableModels: AIModel[] = [
   {
-    id: "deepseek/deepseek-chat:free",
+    id: "deepseek/deepseek-chat-v3-0324:free",
     name: "Deepseek V3",
     provider: "openrouter",
-    modelId: "deepseek/deepseek-chat:free",
+    modelId: "deepseek/deepseek-chat-v3-0324:free",
     isActive: true,
   },
   {

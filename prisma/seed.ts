@@ -33,7 +33,7 @@ async function main() {
       {
         name: "Deepseek V3 (OpenRouter)",
         provider: "openrouter",
-        modelId: "deepseek/deepseek-chat:free",
+        modelId: "deepseek/deepseek-chat-v3-0324:free",
         description: "OpenRouter提供的Deepseek V3模型",
         iconUrl: "/icons/deepseek.svg",
       },

@@ -31,7 +31,7 @@ export async function generateResponse(
     return generateOpenAIResponse(messages, modelId);
   } else if (modelId === "qwen-qwq-plus") {
     return generateQwenResponse(messages, modelId);
-  } else if (modelId.includes("deepseek/deepseek-chat:free")) {
+  } else if (modelId.includes("deepseek/deepseek-chat-v3-0324:free")) {
     console.log("enter v3");
     // OpenRouter Deepseek 模型
     return generateOpenRouterResponse(messages, modelId);
@@ -70,7 +70,7 @@ export async function* generateStreamResponse(
     fullResponse = await generateOpenAIResponse(messages, modelId);
   } else if (modelId === "qwen-qwq-plus") {
     fullResponse = await generateQwenResponse(messages, modelId);
-  } else if (modelId.includes("deepseek/deepseek-chat:free")) {
+  } else if (modelId.includes("deepseek/deepseek-chat-v3-0324:free")) {
     // 对于 OpenRouter 模型，我们直接使用流式 API
     // 这里只有当没有使用流式时才会执行到，所以保留这个回退方案
     fullResponse = await generateOpenRouterResponse(messages, modelId);
@@ -79,7 +79,7 @@ export async function* generateStreamResponse(
   }
 
   // 如果是 OpenRouter Deepseek 模型，使用真正的流式 API
-  if (modelId.includes("deepseek/deepseek-chat:free")) {
+  if (modelId.includes("deepseek/deepseek-chat-v3-0324:free")) {
     logToConsole("Using real streaming for OpenRouter");
     for await (const chunk of generateOpenRouterStreamResponse(
       messages,

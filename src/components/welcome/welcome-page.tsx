@@ -7,6 +7,7 @@ import { DEV_USER_ID } from "@/constants/mockId";
 import { useChat } from "@/hooks/useChat";
 import { useWelcomeStorage } from "@/hooks/useWelcomeStorage";
 import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function WelcomePage() {
   const router = useRouter();
@@ -79,7 +80,35 @@ export function WelcomePage() {
             </p>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 relative">
+            {/* 跳动的小点加载指示器 */}
+            {/* <AnimatePresence>
+              {(isCreating || isAddingChat) && (
+                <motion.div
+                  className="absolute -top-8 left-1/2 -translate-x-1/2 flex space-x-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 h-2 bg-primary rounded-full"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        repeatType: "loop",
+                        ease: "easeInOut",
+                        delay: i * 0.1, // 错开动画时间，形成波浪效果
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence> */}
+
             <EnhancedChatInput
               onSendMessage={handleSendMessage}
               isSendingUserMessage={isCreating || isAddingChat}

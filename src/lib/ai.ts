@@ -45,7 +45,7 @@ export async function generateOpenAICompletion(
 export async function generateOpenRouterCompletion(
   messages: Message[],
   apiKey: string,
-  model: string = "deepseek/deepseek-chat:free"
+  model: string = "deepseek/deepseek-chat-v3-0324:free"
 ) {
   const openRouter = new OpenRouterClient(apiKey);
 
@@ -62,11 +62,13 @@ export async function generateOpenRouterCompletion(
       async *[Symbol.asyncIterator]() {
         // 只返回一个完整的响应
         yield {
-          choices: [{
-            delta: {
-              content: response.content,
+          choices: [
+            {
+              delta: {
+                content: response.content,
+              },
             },
-          }],
+          ],
         };
       },
     };

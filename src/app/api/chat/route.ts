@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   logToConsole("API route called");
 
   // 默认模型 ID
-  let selectedModelId = "deepseek/deepseek-chat:free";
+  let selectedModelId = "deepseek/deepseek-chat-v3-0324:free";
 
   try {
     // 记录请求信息
@@ -111,9 +111,14 @@ export async function POST(req: NextRequest) {
 
     // 检查 OpenRouter API 密钥是否配置
     const openrouterApiKey = process.env.OPENROUTER_API_KEY;
-    if (!openrouterApiKey || openrouterApiKey === "your-openrouter-api-key-here") {
+    if (
+      !openrouterApiKey ||
+      openrouterApiKey === "your-openrouter-api-key-here"
+    ) {
       logToConsole("OpenRouter API key not configured");
-      const mockResponse = `这是对"${messages[messages.length - 1].content}"的模拟回复。请配置 OpenRouter API 密钥以获取真实响应。`;
+      const mockResponse = `这是对"${
+        messages[messages.length - 1].content
+      }"的模拟回复。请配置 OpenRouter API 密钥以获取真实响应。`;
 
       try {
         // 保存用户消息到数据库

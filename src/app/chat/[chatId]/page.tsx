@@ -28,7 +28,7 @@ export default function ChatPage({ params }: { params: any }) {
   }>({ fromWelcome: false, welcomeMessage: "", welcomeModelId: "" });
 
   const [currentModelId, setCurrentModelId] = useState<string>(
-    "deepseek/deepseek-chat:free"
+    "deepseek/deepseek-chat-v3-0324:free"
   );
 
   // 记录 AI 响应请求开始的时间戳
@@ -55,7 +55,7 @@ export default function ChatPage({ params }: { params: any }) {
   useMount(() => {
     const fromWelcome = getIsFromWelcome();
     let welcomeMessage = "";
-    let welcomeModelId = "deepseek/deepseek-chat:free";
+    let welcomeModelId = "deepseek/deepseek-chat-v3-0324:free";
 
     if (fromWelcome) {
       welcomeMessage = getMessage();
