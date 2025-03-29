@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Copy, Check, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { MessageBubble } from "./message-bubble";
 import { cn } from "@/lib/utils";
+import { useUpdateEffect } from "react-use";
 
 interface Message {
   role: string;
@@ -115,6 +116,17 @@ export function MessageList({
     }))
   );
 
+  // 创建引用，用于滚动到消息列表底部
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 使用 useUpdateEffect 确保只在 messages 更新后（非初始渲染）触发滚动
+  useUpdateEffect(() => {
+    // 使用 setTimeout 确保在 DOM 完全更新后再滚动
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  }, [messages]);
+
   return (
     <ScrollArea className={cn("h-full w-full", className)}>
       <div className="flex flex-col space-y-8">
@@ -196,6 +208,8 @@ export function MessageList({
             );
           })
         )}
+        {/* 添加一个空的 div 作为滚动锚点 */}
+        <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
   );
