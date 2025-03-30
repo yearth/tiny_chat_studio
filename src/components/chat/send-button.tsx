@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Loader2, Send, Square } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface SendButtonProps {
   isSendingUserMessage: boolean;
@@ -9,6 +9,7 @@ interface SendButtonProps {
   onSendMessage: () => void;
   onAbortFetchAIResponse: () => void;
   input: string;
+  isExpanded?: boolean;
 }
 
 /**
@@ -21,7 +22,20 @@ export function SendButton({
   onSendMessage,
   onAbortFetchAIResponse,
   input,
+  isExpanded = false,
 }: SendButtonProps) {
+  const [isMac, setIsMac] = useState(false);
+  
+  // 检测操作系统类型
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsMac(/Mac/i.test(navigator.platform));
+    }
+  }, []);
+  
+  const sendShortcut = isMac ? '⌘ + Enter' : 'Ctrl + Enter';
+  const buttonHint = isExpanded ? `点击发送 (${sendShortcut} 快捷键)` : "发送";
+
   return (
     <div className="w-10 h-10 relative">
       <AnimatePresence mode="popLayout" initial={false}>
@@ -39,6 +53,7 @@ export function SendButton({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.2 }}
+            aria-label="停止生成"
           >
             <Square className="h-5 w-5" />
           </motion.button>
@@ -56,6 +71,7 @@ export function SendButton({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.2 }}
+            aria-label="正在发送"
           >
             <Loader2 className="h-5 w-5 animate-spin" />
           </motion.button>
@@ -74,6 +90,8 @@ export function SendButton({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.2 }}
+            title={buttonHint}
+            aria-label={buttonHint}
           >
             <Send className="h-5 w-5" />
           </motion.button>
