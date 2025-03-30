@@ -4,7 +4,6 @@ import { useUsageLimit } from "@/hooks/useUsageLimit";
 import { LoginDialog } from "@/components/auth/login-dialog";
 import { useSession } from "next-auth/react";
 import { Expand, Shrink } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ChatInputArea } from "./chat-input-area";
 // import { FileUpload } from "./file-upload";

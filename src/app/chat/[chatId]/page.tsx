@@ -141,11 +141,20 @@ export default function ChatPage({ params }: { params: any }) {
                   modelId: modelId,
                 });
 
-                // 记录开始时间并获取 AI 响应
-                setAiFetchStartTime(Date.now());
-                await fetchAIResponse({
-                  modelId: modelId,
-                });
+                // 使用 IIFE 在后台异步处理 AI 响应
+                (async () => {
+                  try {
+                    // 记录开始时间并获取 AI 响应
+                    setAiFetchStartTime(Date.now());
+                    await fetchAIResponse({
+                      modelId: modelId,
+                    });
+                  } catch (error) {
+                    console.error("获取 AI 响应失败:", error);
+                  }
+                })();
+
+                return; // 明确返回，不等待 AI 响应
               } catch (error) {
                 console.error("发送消息失败:", error);
               }

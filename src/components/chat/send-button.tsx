@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Loader2, Send, Square } from "lucide-react";
+import { CornerDownLeft, Loader2, Send, Square } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 
@@ -25,15 +25,15 @@ export function SendButton({
   isExpanded = false,
 }: SendButtonProps) {
   const [isMac, setIsMac] = useState(false);
-  
+
   // 检测操作系统类型
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
+    if (typeof navigator !== "undefined") {
       setIsMac(/Mac/i.test(navigator.platform));
     }
   }, []);
-  
-  const sendShortcut = isMac ? '⌘ + Enter' : 'Ctrl + Enter';
+
+  const sendShortcut = isMac ? "⌘ + Enter" : "Ctrl + Enter";
   const buttonHint = isExpanded ? `点击发送 (${sendShortcut} 快捷键)` : "发送";
 
   return (
@@ -93,7 +93,23 @@ export function SendButton({
             title={buttonHint}
             aria-label={buttonHint}
           >
-            <Send className="h-5 w-5" />
+            {isExpanded ? (
+              <div className="flex items-center">
+                {navigator.userAgent.indexOf("Mac") !== -1 ? (
+                  <>
+                    <span className="text-xs mr-1">⌘</span>
+                    <CornerDownLeft className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs mr-1">Ctrl</span>
+                    <CornerDownLeft className="h-4 w-4" />
+                  </>
+                )}
+              </div>
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>
