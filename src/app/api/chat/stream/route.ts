@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { streamText } from "ai";
 import { prisma } from "@/server/db/client";
-import { logToConsole } from "./utils/logger";
+import { logToConsole } from "../utils/logger";
 import { openRouterProvider } from "@/lib/ai/providers";
-import { AIMessage } from "./utils/types";
+import { AIMessage } from "../utils/types";
 import { Message } from "@prisma/client";
 
 /**
- * 聊天 API 路由处理程序
+ * 流式聊天 API 路由处理程序
  * 使用 Vercel AI SDK 实现真正的流式传输
+ * 处理完整的聊天回合：保存用户消息、调用 AI、保存 AI 消息、返回流
  */
 export async function POST(req: NextRequest) {
-  logToConsole("API route called");
+  logToConsole("流式聊天 API 路由被调用");
 
   // 默认模型 ID
   let selectedModelId = "deepseek/deepseek-chat-v3-0324:free";
@@ -21,17 +22,17 @@ export async function POST(req: NextRequest) {
 
   try {
     // 记录请求信息
-    logToConsole("Request headers:", Object.fromEntries(req.headers));
+    logToConsole("请求头:", Object.fromEntries(req.headers));
 
     // 解析请求体
     let body;
     try {
       body = await req.json();
-      logToConsole("Request body:", body);
+      logToConsole("请求体:", body);
     } catch (jsonError) {
-      logToConsole("Error parsing JSON:", jsonError);
+      logToConsole("解析 JSON 错误:", jsonError);
       return NextResponse.json(
-        { error: "Invalid JSON in request body" },
+        { error: "请求体中的 JSON 无效" },
         { status: 400 }
       );
     }
@@ -40,15 +41,15 @@ export async function POST(req: NextRequest) {
 
     // 验证 tempId 是否存在
     if (!tempId) {
-      logToConsole("Warning: No tempId provided in request");
+      logToConsole("警告: 请求中未提供 tempId");
     } else {
-      logToConsole("Received tempId:", tempId);
+      logToConsole("收到 tempId:", tempId);
     }
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      logToConsole("Invalid messages format");
+      logToConsole("消息格式无效");
       return NextResponse.json(
-        { error: "Messages are required and must be an array" },
+        { error: "消息是必需的，且必须是数组" },
         { status: 400 }
       );
     }
@@ -61,18 +62,18 @@ export async function POST(req: NextRequest) {
       });
 
       if (!user) {
-        logToConsole("Creating default user");
+        logToConsole("创建默认用户");
         user = await prisma.user.create({
           data: {
             email: "default@example.com",
-            name: "Default User",
+            name: "默认用户",
           },
         });
       }
     } catch (userError) {
-      logToConsole("Error finding/creating user:", userError);
+      logToConsole("查找/创建用户时出错:", userError);
       return NextResponse.json(
-        { error: "Database error with user management" },
+        { error: "用户管理数据库错误" },
         { status: 500 }
       );
     }
@@ -90,14 +91,14 @@ export async function POST(req: NextRequest) {
 
         if (!chat) {
           return NextResponse.json(
-            { error: "Chat not found or access denied" },
+            { error: "未找到聊天或拒绝访问" },
             { status: 404 }
           );
         }
       } catch (dbError) {
-        logToConsole("Database error finding chat:", dbError);
+        logToConsole("查找聊天数据库错误:", dbError);
         return NextResponse.json(
-          { error: "Database error finding chat" },
+          { error: "查找聊天数据库错误" },
           { status: 500 }
         );
       }
@@ -107,14 +108,14 @@ export async function POST(req: NextRequest) {
         chat = await prisma.chat.create({
           data: {
             userId,
-            title: messages[0]?.content.substring(0, 30) || "New chat",
+            title: messages[0]?.content.substring(0, 30) || "新聊天",
           },
         });
-        logToConsole("Created new chat:", chat.id);
+        logToConsole("创建新聊天:", chat.id);
       } catch (dbError) {
-        logToConsole("Database error creating chat:", dbError);
+        logToConsole("创建聊天数据库错误:", dbError);
         return NextResponse.json(
-          { error: "Database error creating chat" },
+          { error: "创建聊天数据库错误" },
           { status: 500 }
         );
       }
@@ -126,22 +127,12 @@ export async function POST(req: NextRequest) {
       !openrouterApiKey ||
       openrouterApiKey === "your-openrouter-api-key-here"
     ) {
-      logToConsole("OpenRouter API key not configured");
+      logToConsole("未配置 OpenRouter API 密钥");
       const mockResponse = `这是对"${
         messages[messages.length - 1].content
       }"的模拟回复。请配置 OpenRouter API 密钥以获取真实响应。`;
 
       try {
-        // 保存用户消息到数据库
-        const userMessage = messages[messages.length - 1];
-        await prisma.message.create({
-          data: {
-            content: userMessage.content,
-            role: userMessage.role,
-            chatId: chat.id,
-          },
-        });
-
         // 保存模拟 AI 响应到数据库
         await prisma.message.create({
           data: {
@@ -151,7 +142,7 @@ export async function POST(req: NextRequest) {
           },
         });
       } catch (dbError) {
-        logToConsole("Database error saving messages:", dbError);
+        logToConsole("保存消息数据库错误:", dbError);
       }
 
       return NextResponse.json({
@@ -162,22 +153,7 @@ export async function POST(req: NextRequest) {
 
     // 使用用户选择的模型 ID 或默认模型
     const modelToUse = modelId || selectedModelId;
-    logToConsole(`Generating response using model: ${modelToUse}`);
-
-    // 保存用户消息到数据库
-    try {
-      const userMessage = messages[messages.length - 1];
-      await prisma.message.create({
-        data: {
-          content: userMessage.content,
-          role: userMessage.role,
-          chatId: chat.id,
-        },
-      });
-    } catch (dbError) {
-      logToConsole("Error saving user message:", dbError);
-      // 继续处理，不中断流程
-    }
+    logToConsole(`使用模型生成响应: ${modelToUse}`);
 
     // 格式化消息，确保符合 AI SDK 要求
     const formattedMessages = messages.map((msg: AIMessage) => ({
@@ -188,7 +164,7 @@ export async function POST(req: NextRequest) {
     try {
       // 创建一个 Promise 来同步 onFinish 回调的完成
       let onFinishResolve: () => void;
-      const onFinishPromise = new Promise<void>(resolve => {
+      const onFinishPromise = new Promise<void>((resolve) => {
         onFinishResolve = resolve;
       });
 
@@ -203,25 +179,73 @@ export async function POST(req: NextRequest) {
         maxTokens: 1000,
         onFinish: async ({ text }) => {
           // 在此回调中保存完整的 AI 响应到数据库
+          // 初始化模型记录ID
+          let modelRecordId: string | null = null;
+
           try {
+            // 根据模型字符串标识符查找对应的 AIModel 记录
+            if (modelToUse) {
+              try {
+                logToConsole("查找模型记录，模型标识符:", modelToUse);
+
+                const aiModel = await prisma.aIModel.findFirst({
+                  where: {
+                    modelId: modelToUse, // 使用模型字符串标识符查询
+                  },
+                  select: {
+                    id: true, // 只选择 CUID
+                  },
+                });
+
+                if (aiModel) {
+                  modelRecordId = aiModel.id;
+                  logToConsole(
+                    `找到模型记录ID: ${modelRecordId} (对应模型: ${modelToUse})`
+                  );
+                } else {
+                  logToConsole(
+                    `警告：未找到模型记录: ${modelToUse}，将使用null作为modelId`
+                  );
+                }
+              } catch (modelError) {
+                logToConsole("查询模型记录时出错:", modelError);
+                // 继续处理，使用null作为modelId
+              }
+            }
+
             // 保存 AI 消息到数据库并获取完整的保存消息（包含 ID）
             const savedAIMessage = await prisma.message.create({
               data: {
                 content: text,
                 role: "assistant",
                 chatId: chat.id,
-                modelId: modelToUse,
+                modelId: modelRecordId, // 使用查找到的 CUID 或 null
+              },
+              include: {
+                model: true, // 包含关联的模型信息
               },
             });
 
             // 将保存的消息赋值给外部变量，以便在流结束时发送
             finalSavedMessage = savedAIMessage;
             logToConsole(
-              "Saved AI response to database with ID:",
-              savedAIMessage.id
+              "成功保存AI响应到数据库，ID:",
+              savedAIMessage.id,
+              "关联模型ID:",
+              savedAIMessage.modelId
             );
           } catch (dbError) {
-            logToConsole("Error saving AI response to database:", dbError);
+            logToConsole("保存AI响应到数据库时出错:", dbError);
+
+            // 检查是否为 Prisma 外键约束错误
+            if (
+              dbError &&
+              typeof dbError === "object" &&
+              "code" in dbError &&
+              dbError.code === "P2003"
+            ) {
+              logToConsole("外键约束错误，可能是chatId或modelId无效");
+            }
           } finally {
             // 通知我们 onFinish 已经完成
             onFinishResolve();
@@ -230,7 +254,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 手动构造 SSE 响应流，以便在流结束时发送 message_complete 事件
-      logToConsole("Sending custom stream response");
+      logToConsole("发送自定义流响应");
 
       // 确保 textStream 存在
       if (!result.textStream) {
@@ -248,25 +272,25 @@ export async function POST(req: NextRequest) {
               // textChunk 已经是字符串，不需要解码
               // 将文本转义为 JSON 字符串，处理特殊字符
               const escapedText = JSON.stringify(textChunk).slice(1, -1);
-              
+
               // 构造模拟 Vercel AI SDK 的 SSE 格式，包装在 data: 字段中
               const formattedSSE = `data: 0:"${escapedText}"\n\n`;
-              
+
               // 编码并发送格式化的 SSE 消息
               controller.enqueue(encoder.encode(formattedSSE));
-              
+
               // 记录日志，便于调试
               if (textChunk.length < 100) {
                 // 只记录短文本，避免日志过大
-                logToConsole(`Sent stream chunk: ${textChunk}`);
+                logToConsole(`发送流块: ${textChunk}`);
               }
             }
-            
+
             // 文本流已结束，等待 onFinish 回调完成
-            logToConsole("Text stream ended, waiting for onFinish to complete...");
+            logToConsole("文本流已结束，等待 onFinish 完成...");
             await onFinishPromise;
-            logToConsole("onFinish completed, sending message_complete event");
-            
+            logToConsole("onFinish 已完成，发送 message_complete 事件");
+
             // 现在发送 message_complete 事件
             if (finalSavedMessage) {
               // 构造包含最终消息数据的对象
@@ -287,19 +311,19 @@ export async function POST(req: NextRequest) {
               // 发送 message_complete 事件
               controller.enqueue(encoder.encode(completeEvent));
               logToConsole(
-                "Sent message_complete event with data:",
+                "已发送带有数据的 message_complete 事件:",
                 finalData
               );
             } else {
               logToConsole(
-                "Warning: No finalSavedMessage available for message_complete event"
+                "警告: message_complete 事件没有可用的 finalSavedMessage"
               );
             }
 
             // 关闭流
             controller.close();
           } catch (error) {
-            logToConsole("Error in custom stream:", error);
+            logToConsole("自定义流错误:", error);
             controller.error(error);
           }
         },
@@ -314,16 +338,16 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch (aiError) {
-      logToConsole("Error in AI stream generation:", aiError);
+      logToConsole("AI 流生成错误:", aiError);
       return NextResponse.json(
-        { error: "Failed to generate AI response", details: String(aiError) },
+        { error: "生成 AI 响应失败", details: String(aiError) },
         { status: 500 }
       );
     }
   } catch (error) {
-    logToConsole("Error in chat API:", error);
+    logToConsole("聊天 API 错误:", error);
     return NextResponse.json(
-      { error: "Failed to process chat request", details: String(error) },
+      { error: "处理聊天请求失败", details: String(error) },
       { status: 500 }
     );
   }

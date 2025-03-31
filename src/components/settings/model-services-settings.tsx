@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogDescription,
@@ -18,21 +17,23 @@ import {
 } from "@/components/ui/dialog";
 import { CustomDialogContent } from "@/components/ui/custom-dialog";
 
-// 提供商配置类型定义
-interface ProviderConfig {
-  enabled: boolean;
-  apiKey: string;
-  apiAddress: string;
-  models: string[];
-}
+// 导入类型
+import { ProviderConfig, ProviderConfigs, ProviderConfigProps } from "@/types/settings";
 
-type ProviderConfigs = {
-  [key: string]: ProviderConfig;
+// 导入提供商配置组件
+import { OpenAIConfig } from "./providers/openai-config";
+import { GeminiConfig } from "./providers/gemini-config";
+import { GenericProviderConfig } from "./providers/generic-provider-config";
+
+// 定义提供商配置组件映射
+const ProviderConfigComponents: { [key: string]: React.ComponentType<ProviderConfigProps<any>> } = {
+  openai: OpenAIConfig,
+  gemini: GeminiConfig,
+  // 可以在这里添加更多特定提供商的配置组件
 };
 
 export function ModelServicesSettings() {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [showApiKey, setShowApiKey] = useState(false);
   const [isAddModelDialogOpen, setIsAddModelDialogOpen] = useState(false);
 
   // 提供商列表
@@ -57,58 +58,22 @@ export function ModelServicesSettings() {
     },
   });
 
+  // 处理特定提供商配置变更的统一回调函数
+  const handleSpecificConfigChange = (newConfig: Partial<ProviderConfig>) => {
+    if (!selectedProvider) return;
+
+    setProviderConfigs((prev) => ({
+      ...prev,
+      [selectedProvider]: {
+        ...prev[selectedProvider],
+        ...newConfig,
+      },
+    }));
+  };
+
   // 处理启用/禁用提供商
   const handleToggleProvider = (enabled: boolean) => {
-    if (!selectedProvider) return;
-
-    setProviderConfigs((prev) => ({
-      ...prev,
-      [selectedProvider]: {
-        ...prev[selectedProvider],
-        enabled,
-      },
-    }));
-  };
-
-  // 处理 API 密钥变更
-  const handleApiKeyChange = (value: string) => {
-    if (!selectedProvider) return;
-
-    setProviderConfigs((prev) => ({
-      ...prev,
-      [selectedProvider]: {
-        ...prev[selectedProvider],
-        apiKey: value,
-      },
-    }));
-  };
-
-  // 处理 API 地址变更
-  const handleApiAddressChange = (value: string) => {
-    if (!selectedProvider) return;
-
-    setProviderConfigs((prev) => ({
-      ...prev,
-      [selectedProvider]: {
-        ...prev[selectedProvider],
-        apiAddress: value,
-      },
-    }));
-  };
-
-  // 处理删除模型
-  const handleDeleteModel = (modelName: string) => {
-    if (!selectedProvider) return;
-
-    setProviderConfigs((prev) => ({
-      ...prev,
-      [selectedProvider]: {
-        ...prev[selectedProvider],
-        models: prev[selectedProvider].models.filter(
-          (model) => model !== modelName
-        ),
-      },
-    }));
+    handleSpecificConfigChange({ enabled });
   };
 
   return (
@@ -168,103 +133,44 @@ export function ModelServicesSettings() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="api-key">API 密钥</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="api-key"
-                    type={showApiKey ? "text" : "password"}
-                    value={providerConfigs[selectedProvider]?.apiKey || ""}
-                    onChange={(e) => handleApiKeyChange(e.target.value)}
-                    placeholder="输入 API 密钥"
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                  >
-                    {showApiKey ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button>检测</Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="api-address">API 地址 (可选)</Label>
-                <Input
-                  id="api-address"
-                  value={providerConfigs[selectedProvider]?.apiAddress || ""}
-                  onChange={(e) => handleApiAddressChange(e.target.value)}
-                  placeholder="输入 API 地址"
+            {/* 动态渲染提供商配置组件 */}
+            {(() => {
+              const currentConfig = providerConfigs[selectedProvider];
+              const ComponentToRender = ProviderConfigComponents[selectedProvider] || GenericProviderConfig;
+              
+              return (
+                <ComponentToRender 
+                  config={currentConfig} 
+                  onConfigChange={handleSpecificConfigChange} 
                 />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">模型列表</h4>
-                <Dialog
-                  open={isAddModelDialogOpen}
-                  onOpenChange={setIsAddModelDialogOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      添加模型
-                    </Button>
-                  </DialogTrigger>
-                  <CustomDialogContent>
-                    <DialogHeader>
-                      <DialogTitle>添加模型</DialogTitle>
-                      <DialogDescription>
-                        此功能正在开发中，敬请期待...
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsAddModelDialogOpen(false)}
-                      >
-                        取消
-                      </Button>
-                      <Button onClick={() => setIsAddModelDialogOpen(false)}>
-                        确认
-                      </Button>
-                    </DialogFooter>
-                  </CustomDialogContent>
-                </Dialog>
-              </div>
-
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {providerConfigs[selectedProvider]?.models.length ? (
-                  providerConfigs[selectedProvider].models.map((model) => (
-                    <div
-                      key={model}
-                      className="flex justify-between items-center p-2 bg-accent/30 rounded-md"
-                    >
-                      <span>{model}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteModel(model)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    暂无模型
-                  </p>
-                )}
-              </div>
-            </div>
+              );
+            })()}
+            
+            {/* 添加模型对话框 */}
+            <Dialog
+              open={isAddModelDialogOpen}
+              onOpenChange={setIsAddModelDialogOpen}
+            >
+              <CustomDialogContent>
+                <DialogHeader>
+                  <DialogTitle>添加模型</DialogTitle>
+                  <DialogDescription>
+                    此功能正在开发中，敬请期待...
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAddModelDialogOpen(false)}
+                  >
+                    取消
+                  </Button>
+                  <Button onClick={() => setIsAddModelDialogOpen(false)}>
+                    确认
+                  </Button>
+                </DialogFooter>
+              </CustomDialogContent>
+            </Dialog>
           </div>
         ) : (
           <div className="flex h-full items-center justify-center">

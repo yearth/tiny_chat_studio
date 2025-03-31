@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String?
-  email         String?      @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  apiKeys       ApiKey[]
-  chats         Chat[]
-  usageLimits   UsageLimit[]
+  id                String             @id @default(cuid())
+  name              String?
+  email             String?            @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  accounts          Account[]
+  sessions          Session[]
+  providerInstances ProviderInstance[]
+  chats             Chat[]
+  usageLimits       UsageLimit[]
 }
 
 model Chat {
@@ -45,29 +45,57 @@ model Message {
   model     AIModel? @relation(fields: [modelId], references: [id])
 }
 
-model AIModel {
-  id          String    @id @default(cuid())
-  name        String
-  provider    String
-  modelId     String
-  description String?
-  iconUrl     String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  messages    Message[]
+model ProviderDefinition {
+  id                 String             @id @default(cuid())
+  type               String             @unique
+  name               String
+  requiresApiKey     Boolean            @default(true)
+  requiresApiAddress Boolean            @default(false)
+  iconUrl            String?
+  description        String?
+  isSystemDefined    Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  providerInstances  ProviderInstance[]
+  aiModels           AIModel[]
 }
 
-model ApiKey {
-  id        String   @id @default(cuid())
-  name      String
-  key       String   @unique
-  provider  String
-  userId    String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model ProviderInstance {
+  id                   String                  @id @default(cuid())
+  userId               String
+  providerDefinitionId String
+  name                 String
+  enabled              Boolean                 @default(true)
+  apiKey               String? // 重要：后端需要加密存储此字段
+  apiAddress           String?
+  customConfig         Json?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  user                 User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerDefinition   ProviderDefinition      @relation(fields: [providerDefinitionId], references: [id], onDelete: Restrict)
+  enabledModels        ProviderInstanceModel[]
+}
+
+model ProviderInstanceModel {
+  providerInstanceId String
+  aiModelId          String
+  providerInstance   ProviderInstance @relation(fields: [providerInstanceId], references: [id], onDelete: Cascade)
+  aiModel            AIModel          @relation(fields: [aiModelId], references: [id], onDelete: Cascade)
+
+  @@id([providerInstanceId, aiModelId])
+}
+
+model AIModel {
+  id                   String                  @id @default(cuid())
+  name                 String
+  modelId              String
+  providerDefinitionId String
+  description          String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  messages             Message[]
+  providerDefinition   ProviderDefinition      @relation(fields: [providerDefinitionId], references: [id], onDelete: Cascade)
+  enabledInInstances   ProviderInstanceModel[]
 }
 
 model Account {

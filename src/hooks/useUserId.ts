@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 
-const DEV_USER_ID = "cm8showqr0000jsdgu3gx5bof";
+const DEV_USER_ID = "cm8x762lm0005js4myejolohf";
 
 export const useUserId = () => {
   const { data: session } = useSession();

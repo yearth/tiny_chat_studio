@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { userId, title } = body;
-    console.log("🔍 ~ POST ~ src/app/api/chats/route.ts:36 ~ userId:", userId);
 
     if (!userId) {
       return NextResponse.json({ error: "缺少用户ID参数" }, { status: 400 });

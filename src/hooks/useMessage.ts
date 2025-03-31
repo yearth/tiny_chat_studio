@@ -46,7 +46,7 @@ interface UseMessageResult {
 // 保存单条消息到数据库
 export const saveMessage = async (
   chatId: string,
-  message: { content: string; role: string; modelId?: string }
+  message: { content: string; role: string; modelStringId?: string }
 ): Promise<Message> => {
   const response = await fetch(`/api/chat/${chatId}/messages`, {
     method: "POST",
@@ -119,7 +119,7 @@ export function useMessage(chatId?: string): UseMessageResult {
       const userMessage = await saveMessage(chatId, {
         content,
         role: "user",
-        modelId,
+        modelStringId: modelId,
       });
 
       // 执行乐观更新，将用户消息添加到本地缓存
@@ -207,7 +207,7 @@ export function useMessage(chatId?: string): UseMessageResult {
         }));
 
         // 直接调用 API 并获取流式响应，传递临时ID
-        const response = await fetch(`/api/chat`, {
+        const response = await fetch(`/api/chat/stream`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
