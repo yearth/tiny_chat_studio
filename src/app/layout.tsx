@@ -41,7 +41,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <div className="min-h-screen h-screen flex flex-col">
-                <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
+                <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-sm">
                   <Navbar />
                 </div>
                 <div className="w-full flex flex-1 h-[calc(100vh-64px)]">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Text, Search, MessageSquare, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +82,7 @@ export function ChatHistoryDialog() {
           <Text className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <CustomDialogContent className="w-[70vw] h-[90vh] flex flex-col">
+      <CustomDialogContent className="w-[80vw] h-[80vh] flex flex-col">
         <DialogHeader className="border-b pb-4">
           <VisuallyHidden>
             <DialogTitle>聊天历史记录</DialogTitle>
