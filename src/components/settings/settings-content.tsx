@@ -10,7 +10,7 @@ interface SettingsContentProps {
 
 export function SettingsContent({ selectedSection }: SettingsContentProps) {
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1">
       <ScrollArea className="h-full">
         {selectedSection === "model-services" ? (
           <ModelServicesSettings />
