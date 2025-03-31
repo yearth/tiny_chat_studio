@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Settings, Twitch } from "lucide-react";
+import { Twitch } from "lucide-react";
 import { ChatHistoryDialog } from "@/components/chat/chat-history-dialog";
+import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -27,10 +28,8 @@ export function Navbar() {
           <ChatHistoryDialog />
           {/* 主题切换 */}
           <ThemeToggle />
-          {/* 设置按钮 */}
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-          </Button>
+          {/* 设置对话框 */}
+          <SettingsDialog />
 
           {session ? (
             <Avatar>
