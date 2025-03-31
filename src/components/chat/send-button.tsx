@@ -76,7 +76,6 @@ export function SendButton({
             <Loader2 className="h-5 w-5 animate-spin" />
           </motion.button>
         ) : (
-          // 发送按钮 - 默认状态
           <motion.button
             key="send"
             type="button"
@@ -93,23 +92,40 @@ export function SendButton({
             title={buttonHint}
             aria-label={buttonHint}
           >
-            {isExpanded ? (
-              <div className="flex items-center">
-                {navigator.userAgent.indexOf("Mac") !== -1 ? (
-                  <>
-                    <span className="text-xs mr-1">⌘</span>
-                    <CornerDownLeft className="h-4 w-4" />
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xs mr-1">Ctrl</span>
-                    <CornerDownLeft className="h-4 w-4" />
-                  </>
-                )}
-              </div>
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              {isExpanded ? (
+                <motion.div 
+                  key="shortcut" 
+                  className="flex items-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {navigator.userAgent.indexOf("Mac") !== -1 ? (
+                    <>
+                      <span className="text-xs mr-1">⌘</span>
+                      <CornerDownLeft className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs mr-1">Ctrl</span>
+                      <CornerDownLeft className="h-4 w-4" />
+                    </>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="send-icon"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Send className="h-5 w-5" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
         )}
       </AnimatePresence>
