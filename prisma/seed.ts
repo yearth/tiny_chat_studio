@@ -83,6 +83,7 @@ async function main() {
       where: { email: "test@example.com" },
       update: {},
       create: {
+        id: "0001",
         name: "测试用户",
         email: "test@example.com",
         password: "hashed_password", // 实际应用中应该使用哈希密码
